@@ -2,10 +2,10 @@
    "name": "GTOLADEV",
    "description": "DESC",
    "key": "com.gtola.gtoladev",
-   "baseUrl": "https://9016-46-252-40-224.ngrok-free.app/",
+   "baseUrl": "https://9af0-46-252-40-224.ngrok-free.app/",
    "vendor": {
        "name": "GTOLADEV",
-       "url": "https://9016-46-252-40-224.ngrok-free.app/"
+       "url": "https://9af0-46-252-40-224.ngrok-free.app/"
    },
    "authentication": {
        "type": "jwt"
