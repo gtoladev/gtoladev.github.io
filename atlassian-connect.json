@@ -1,0 +1,25 @@
+{
+   "name": "GTOLADEV",
+   "description": "DESC",
+   "key": "com.gtola.gtoladev",
+   "baseUrl": "https://9016-46-252-40-224.ngrok-free.app/",
+   "vendor": {
+       "name": "GTOLADEV",
+       "url": "https://9016-46-252-40-224.ngrok-free.app/"
+   },
+   "authentication": {
+       "type": "jwt"
+   },
+   "lifecycle": {
+       "installed": "/installed"
+   },
+   "version": "1.1",
+   "scopes": [ "READ", "WRITE" ],
+   "apiVersion": 1,
+   "links": {
+     "self": "https://gtoladev.github.io/atlassian-connect.json",
+     "documentation": "https://gtoladev.github.io/"
+   },
+   "modules": {
+   }
+}
