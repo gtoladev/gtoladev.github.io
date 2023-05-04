@@ -72,7 +72,7 @@ exports.handler = async function (event, context) {
 
   await fetch(bodyJSON.baseUrl+'/rest/atlassian-connect/1/app/module/dynamic', {
     method: 'POST',
-    body: bodyData
+    body: bodyData,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
