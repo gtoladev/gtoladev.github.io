@@ -79,8 +79,13 @@ exports.handler = async function (event, context) {
       'Authorization': 'JWT '+token
     }
   })
-  .then(res => res.json())
-  .then(json => console.log(json));
+  .then(response => {
+    console.log('GT Response status: '+response.status+' '+response.statusText);
+    );
+    return response.text();
+  })
+  .then(text => console.log('GT Response txt: '+text))
+  .catch(err => console.error('GT Response err: '+err));
 
   //await fetch(bodyJSON.baseUrl+'/rest/atlassian-connect/1/app/module/dynamic', {
   //  method: 'GET',
