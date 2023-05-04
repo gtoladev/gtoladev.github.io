@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "atlassian-jwt": "^2.0.2",
-    "moment": "^2.29.4",
-    "node-fetch": "^3.3.1"
-  }
-}
