@@ -2,16 +2,16 @@
    "name": "GTOLADEV",
    "description": "DESC",
    "key": "com.gtola.gtoladev",
-   "baseUrl": "https://f124-46-252-40-224.ngrok-free.app/",
+   "baseUrl": "https://app.netlify.com/sites/moonlit-dieffenbachia-47522a/",
    "vendor": {
        "name": "GTOLADEV",
-       "url": "https://f124-46-252-40-224.ngrok-free.app/"
+       "url": "https://app.netlify.com/sites/moonlit-dieffenbachia-47522a/"
    },
    "authentication": {
        "type": "jwt"
    },
    "lifecycle": {
-       "installed": "/installed"
+       "installed": "/functions/install"
    },
    "version": "1.1",
    "scopes": [ "READ", "WRITE" ],
