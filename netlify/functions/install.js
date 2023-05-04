@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 
 
 exports.handler = async function (event, context) {
-  var bodyData = '{
+  var bodyData = {
   "jiraEntityProperties": [
     {
       "keyConfigurations": [
@@ -46,7 +46,7 @@ exports.handler = async function (event, context) {
       "key": "dynamic-select-field"
     }
   ]
-}';
+};
   
   
   
