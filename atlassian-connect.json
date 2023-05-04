@@ -11,7 +11,7 @@
        "type": "jwt"
    },
    "lifecycle": {
-       "installed": "/functions/install"
+       "installed": "/.netlify/functions/install"
    },
    "version": "1.1",
    "scopes": [ "READ", "WRITE" ],
