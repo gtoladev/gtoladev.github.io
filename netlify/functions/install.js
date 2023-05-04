@@ -23,7 +23,7 @@ exports.handler = async function (event, context) {
   const token = jwt.encodeSymmetric(tokenData, bodyJSON.sharedSecret);
   console.log('GT token:'+token);
 
-  fetch(bodyJSON.baseUrl+'/rest/atlassian-connect/1/app/module/dynamic', {
+  await fetch(bodyJSON.baseUrl+'/rest/atlassian-connect/1/app/module/dynamic', {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
