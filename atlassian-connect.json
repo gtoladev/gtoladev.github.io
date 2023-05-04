@@ -2,10 +2,10 @@
    "name": "GTOLADEV",
    "description": "DESC",
    "key": "com.gtola.gtoladev",
-   "baseUrl": "https://app.netlify.com/sites/moonlit-dieffenbachia-47522a",
+   "baseUrl": "https://moonlit-dieffenbachia-47522a.netlify.app",
    "vendor": {
        "name": "GTOLADEV",
-       "url": "https://app.netlify.com/sites/moonlit-dieffenbachia-47522a"
+       "url": "https://moonlit-dieffenbachia-47522a.netlify.app"
    },
    "authentication": {
        "type": "jwt"
