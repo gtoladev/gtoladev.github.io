@@ -30,11 +30,10 @@ exports.handler = async function (event, context) {
       'Authorization': 'JWT '+token
     }
   })
-  .then(response => {
-    console.log('GT Response:'+ response.status +' '+response.statusText);
-  })
-  .then(text => console.log('GT success: '+text))
-  .catch(err => console.log('GT err: '+err));
+  .then(res => res.json())
+  .then(json => console.log(json));
+  
+  
 
  
   
