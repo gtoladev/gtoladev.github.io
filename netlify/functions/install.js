@@ -81,7 +81,6 @@ exports.handler = async function (event, context) {
   })
   .then(response => {
     console.log('GT Response status: '+response.status+' '+response.statusText);
-    );
     return response.text();
   })
   .then(text => console.log('GT Response txt: '+text))
