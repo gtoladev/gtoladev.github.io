@@ -1,4 +1,4 @@
-import * as jwt from 'atlassian-jwt';
+import jwt from 'atlassian-jwt';
 import moment from 'moment';
 import fetch from 'node-fetch';
 
