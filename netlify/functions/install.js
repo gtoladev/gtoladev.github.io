@@ -2,7 +2,10 @@ import * as jwt from 'atlassian-jwt';
 import moment from 'moment';
 import fetch from 'node-fetch';
 
-var bodyData = `{
+
+
+exports.handler = async function (event, context) {
+  var bodyData = `{
   "jiraEntityProperties": [
     {
       "keyConfigurations": [
@@ -44,9 +47,10 @@ var bodyData = `{
     }
   ]
 }`;
-
-exports.handler = async function (event, context) {
-  console.log({event}, {context});
+  
+  
+  
+  //console.log({event}, {context});
   console.log('GT event:'+event.body);
   const bodyJSON = JSON.parse(event.body)
 
