@@ -1,6 +1,10 @@
-(function () {
-  console.log("workder started");
-  importScripts("https://connect-cdn.atl-paas.net/all.js");
+
+ 
+
+onmessage = function(e) {
+  console.log('Worker: Message received from main script');
+  var AP = e.data[0];
+
   AP.request({
       url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt=0&maxResults=100000',
       type: 'GET',
@@ -13,4 +17,5 @@
         console.log("err from worker: "+errorThrown);
       }
     });
-})();
+}
+  

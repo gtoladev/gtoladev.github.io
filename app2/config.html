@@ -19,7 +19,7 @@ AP.request({
   });
 
 }
-  
+
 function fn2workerURL(fn) {
   const blob = new Blob([`(${fn.toString()})()`], { type: "text/javascript" });
   return URL.createObjectURL(blob);
@@ -28,9 +28,9 @@ function fn2workerURL(fn) {
 function workers() {
   let running = 0;
   for (let n = 0; n < 1; ++n) {
-      var workers1 = new Worker(fn2workerURL(issues));//"worker.js"
+      var workers1 = new Worker("worker.js");//"worker.js"  fn2workerURL(issues)
       workers1.onmessage = workerDone;
-      workers1.postMessage({ id: n, count: 10000 });
+      workers1.postMessage(AP);
       ++running;
   }
 }
