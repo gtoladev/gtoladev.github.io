@@ -15,9 +15,9 @@ function workers() {
 
 function workerDone(e) {
     --running;
-    console.log(("Worker " + e.data.id + " is done, result: " + e.data.sum);
+    console.log("Worker " + e.data.id + " is done, result: " + e.data.sum);
     if (running === 0) {
-        console.log(("All workers complete");
+        console.log("All workers complete");
     }
 }
 
