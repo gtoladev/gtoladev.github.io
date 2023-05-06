@@ -6,7 +6,7 @@
 function workers() {
   let running = 0;
   for (let n = 0; n < 1; ++n) {
-      workers = new Worker("worker.js");
+      var workers = new Worker("worker.js");
       workers.onmessage = workerDone;
       workers.postMessage({ id: n, count: 10000 });
       ++running;
