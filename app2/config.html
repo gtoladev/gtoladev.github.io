@@ -4,9 +4,7 @@
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
 function GT() {
-  //AP.request({url: '/rest/api/2/project', type: 'GET', success: function(responseText){ alert(responseText); let data = JSON.parse(responseText); }, error: function(xhr, statusText, errorThrown){ alert("Error while getting issue details: "+JSON.stringify(arguments)); }});
-
-  AP.request({url: '/rest/atlassian-connect/1/app/module/dynamic', type: 'GET', success: function(responseText){ alert(responseText); let data = JSON.parse(responseText); }, error: function(xhr, statusText, errorThrown){ alert("Error while getting issue details: "+JSON.stringify(arguments)); }});  
+  AP.request({url: '/rest/api/2/project', type: 'GET', success: function(responseText){ alert(responseText); let data = JSON.parse(responseText); }, error: function(xhr, statusText, errorThrown){ alert("Error while getting issue details: "+JSON.stringify(arguments)); }});
 }
 </script>
 </head>
