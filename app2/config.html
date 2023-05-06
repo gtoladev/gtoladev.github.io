@@ -3,6 +3,24 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
+function workers() {
+  let running = 0;
+  for (let n = 0; n < 1; ++n) {
+      workers = new Worker("worker.js");
+      workers.onmessage = workerDone;
+      workers.postMessage({ id: n, count: 10000 });
+      ++running;
+  }
+  function workerDone(e) {
+      --running;
+      console.log(("Worker " + e.data.id + " is done, result: " + e.data.sum);
+      if (running === 0) {
+          console.log(("All workers complete");
+      }
+  }
+}
+
+
 function issues() {
 
 AP.request({
@@ -46,7 +64,7 @@ function createCustomField() {
 </head>
 <body>
 <h1>CONFIG<h1>
-<button onclick="issues()">GoGOGOGOGOOGOG</button>
+<button onclick="workers()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
