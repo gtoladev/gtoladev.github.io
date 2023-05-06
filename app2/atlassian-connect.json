@@ -1,6 +1,6 @@
 {
    "name": "app2",
-   "description": "desc2"
+   "description": "desc2",
    "key": "com.gtola.app2",
    "baseUrl": "https://gtoladev.github.io/",
    "vendor": {
