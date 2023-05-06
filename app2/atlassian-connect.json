@@ -1,0 +1,41 @@
+{
+   "name": "app2",
+   "description": "desc2"
+   "key": "com.gtola.app2",
+   "baseUrl": "https://gtoladev.github.io/",
+   "vendor": {
+       "name": "GTola",
+       "url": "https://gtoladev.github.io/"
+   },
+   "authentication": {
+       "type": "jwt"
+   },
+   "lifecycle": {
+       "installed": "/.netlify/functions/install"
+   },
+   "version": "1.1",
+   "scopes": [ "ADMIN","READ", "WRITE"  ],
+   "apiVersion": 1,
+   "links": {
+     "self": "https://gtoladev.github.io/app2/atlassian-connect.json",
+     "documentation": "https://gtoladev.github.io/"
+   },
+   "modules": {
+      "adminPages": [
+        {
+          "url": "/app2/admin.html",
+          "name": {
+            "value": "Issue Time in Status Reports Admin Page"
+          },
+          "key": "gtola-app2-admin-page"
+        }
+      ],
+      "configurePage": {
+        "url": "/app2/config.html",
+        "name": {
+          "value": "Issue Time in Status Reports Configure"
+        },
+        "key": "gtola-app2-config-page"
+      }
+   }
+}
