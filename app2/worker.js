@@ -1,6 +1,6 @@
 (function () {
   console.log("workder started");
-  import("https://connect-cdn.atl-paas.net/all.js");
+  self.importScripts("https://connect-cdn.atl-paas.net/all.js");
   AP.request({
       url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt=0&maxResults=100000',
       type: 'GET',
