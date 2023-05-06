@@ -12,4 +12,4 @@
         console.log("err from worker: "+errorThrown);
       }
     });
-});
+})();
