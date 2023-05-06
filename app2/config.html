@@ -3,25 +3,6 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
-function workers() {
-  let running = 0;
-  for (let n = 0; n < 1; ++n) {
-      var workers1 = new Worker("worker.js");
-      workers1.onmessage = workerDone;
-      workers1.postMessage({ id: n, count: 10000 });
-      ++running;
-  }
-}
-
-function workerDone(e) {
-    --running;
-    console.log("Worker " + e.data.id + " is done, result: " + e.data.sum);
-    if (running === 0) {
-        console.log("All workers complete");
-    }
-}
-
-
 function issues() {
 
 AP.request({
@@ -38,6 +19,32 @@ AP.request({
   });
 
 }
+  
+function fn2workerURL(fn) {
+  const blob = new Blob([`(${fn.toString()})()`], { type: "text/javascript" });
+  return URL.createObjectURL(blob);
+}
+
+function workers() {
+  let running = 0;
+  for (let n = 0; n < 1; ++n) {
+      var workers1 = new Worker(fn2workerURL(issues));//"worker.js"
+      workers1.onmessage = workerDone;
+      workers1.postMessage({ id: n, count: 10000 });
+      ++running;
+  }
+}
+
+function workerDone(e) {
+    --running;
+    console.log("Worker " + e.data.id + " is done, result: " + e.data.sum);
+    if (running === 0) {
+        console.log("All workers complete");
+    }
+}
+
+
+
 function GT() {
   AP.request({url: '/rest/api/2/project', type: 'GET', success: function(responseText){ alert(responseText); let data = JSON.parse(responseText); }, error: function(xhr, statusText, errorThrown){ alert("Error while getting issue details: "+JSON.stringify(arguments)); }});
 }
