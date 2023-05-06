@@ -6,11 +6,29 @@
 function GT() {
   AP.request({url: '/rest/api/2/project', type: 'GET', success: function(responseText){ alert(responseText); let data = JSON.parse(responseText); }, error: function(xhr, statusText, errorThrown){ alert("Error while getting issue details: "+JSON.stringify(arguments)); }});
 }
+function createCustomField() {
+  AP.request({
+    url: 'rest/api/3/field',
+    type: 'POST',
+    data: {
+      "description": "Custom field for picking groups",
+      "name": "New custom field",
+      "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:grouppickersearcher",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:grouppicker"
+    },
+    success: function(responseText){
+      alert("success:"+responseText);
+    },
+    error: function(xhr, statusText, errorThrown){
+      alert("err: "+errorThrown);
+    }
+  });
+}
 </script>
 </head>
 <body>
 <h1>CONFIG<h1>
-<button onclick="GT()">GoGOGOGOGOOGOG</button>
+<button onclick="createCustomField()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
