@@ -6,15 +6,15 @@
 function issues() {
 
 AP.request({
-    url: '/rest/api/3/search',
+    url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt=0&maxResults=100000',
     type: 'GET',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
     success: function(responseText){
-      alert("success:"+responseText);
+      console.log("success:"+responseText);
     },
     error: function(xhr, statusText, errorThrown){
-      alert("err: "+errorThrown);
+      console.log("err: "+errorThrown);
     }
   });
 
