@@ -1,4 +1,5 @@
 (function () {
+  console.log("workder started");
   AP.request({
       url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt=0&maxResults=100000',
       type: 'GET',
