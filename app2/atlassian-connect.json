@@ -2,10 +2,10 @@
    "name": "app2",
    "description": "desc2",
    "key": "com.gtola.app2",
-   "baseUrl": "https://gtoladev.github.io",
+   "baseUrl": "https://moonlit-dieffenbachia-47522a.netlify.app",
    "vendor": {
        "name": "GTola",
-       "url": "https://gtoladev.github.io"
+       "url": "https://moonlit-dieffenbachia-47522a.netlify.app"
    },
    "authentication": {
        "type": "jwt"
