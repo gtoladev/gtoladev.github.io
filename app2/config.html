@@ -5,7 +5,18 @@
 <script>
 function issues() {
 
-
+AP.request({
+    url: '/rest/api/3/search',
+    type: 'GET',
+    contentType: 'application/json',
+    headers: { Accept: 'application/json' },
+    success: function(responseText){
+      alert("success:"+responseText);
+    },
+    error: function(xhr, statusText, errorThrown){
+      alert("err: "+errorThrown);
+    }
+  });
 
 }
 function GT() {
