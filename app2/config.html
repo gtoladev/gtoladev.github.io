@@ -11,13 +11,14 @@ function workers() {
       workers.postMessage({ id: n, count: 10000 });
       ++running;
   }
-  function workerDone(e) {
-      --running;
-      console.log(("Worker " + e.data.id + " is done, result: " + e.data.sum);
-      if (running === 0) {
-          console.log(("All workers complete");
-      }
-  }
+}
+
+function workerDone(e) {
+    --running;
+    console.log(("Worker " + e.data.id + " is done, result: " + e.data.sum);
+    if (running === 0) {
+        console.log(("All workers complete");
+    }
 }
 
 
