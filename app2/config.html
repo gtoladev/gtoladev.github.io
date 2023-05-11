@@ -3,6 +3,29 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
+function manual() {
+  var token = document.getElementById("jwt").value;
+ try {
+    const response = await fetch("/rest/api/3/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        'Authorization': 'JWT '+token
+      },
+      body: JSON.stringify({}),
+    });
+
+    const result = await response.json();
+    console.log("GT Success:", result);
+  } catch (error) {
+    console.error("GT Error:", error);
+  }
+
+}
+
+
+
 function issues() {
 
 AP.request({
@@ -72,7 +95,8 @@ function createCustomField() {
 </head>
 <body>
 <h1>CONFIG<h1>
-<button onclick="workers()">GoGOGOGOGOOGOG</button>
+<input type="text" id="jwt"></input>
+<button onclick="manual()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
