@@ -64,7 +64,7 @@ exports.handler = async function (event, context) {
   const tokenData = {
       "iss": bodyJSON.key, //bodyJSON.clientKey,
       "iat": now.unix(),                    // The time the token is generated
-      "exp": now.add(3, 'minutes').unix(),  // Token expiry time (recommend 3 minutes after issuing)
+      "exp": now.add(60, 'minutes').unix(),  // Token expiry time (recommend 3 minutes after issuing)
       "qsh": jwt.createQueryStringHash(req3) // [Query String Hash](https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash)
   };
 
