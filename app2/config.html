@@ -3,7 +3,7 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
-function manual() {
+async function manual() {
   var token = document.getElementById("jwt").value;
   var body = {
   "expand": [
@@ -37,6 +37,7 @@ function manual() {
   } catch (error) {
     console.error("GT Error:", error);
   }
+  
 
 }
 
