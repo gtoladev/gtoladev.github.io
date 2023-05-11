@@ -84,11 +84,16 @@ function workerDone(e) {
     }
 }
 
-
-
-function GT() {
-  AP.request({url: '/rest/api/2/project', type: 'GET', success: function(responseText){ alert(responseText); let data = JSON.parse(responseText); }, error: function(xhr, statusText, errorThrown){ alert("Error while getting issue details: "+JSON.stringify(arguments)); }});
+function GT(startAt) {
+  if(!startAt) {
+    startAt = { i:900 };
+    for(var i =0;<10*100; i++)
+      AP.request({url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt='+(i*100)+'&maxResults=100', type: 'GET', success: function(responseText){ console.log("GT res: "+ responseText); let data = JSON.parse(responseText); GT(startAt.i=startAt.i+1); }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});
+  } else {
+    AP.request({url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){ console.log("GT res: "+ responseText); let data = JSON.parse(responseText); GT(startAt.i=startAt.i+1); }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});  
+  }
 }
+
 function createCustomField() {
   AP.request({
     url: '/rest/api/3/field',
@@ -114,7 +119,7 @@ function createCustomField() {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="manual()">GoGOGOGOGOOGOG</button>
+<button onclick="GT()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
