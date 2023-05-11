@@ -5,8 +5,24 @@
 <script>
 function manual() {
   var token = document.getElementById("jwt").value;
+  var body = {
+  "expand": [
+    "names",
+    "schema",
+    "operations"
+  ],
+  "fields": [
+    "summary",
+    "status",
+    "assignee"
+  ],
+  "fieldsByKeys": false,
+  "jql": "",
+  "maxResults": 15,
+  "startAt": 0
+};
  try {
-    const response = await fetch("/rest/api/3/search", {
+    const response = await fetch("/rest/api/2/search", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
