@@ -143,12 +143,29 @@ function GT2() {
   }
 }
 
+var startAt=0;
+function GT3() {
+  for(var i=0;i<10;i++)
+    GT4();
+}
+function GT4() {
+  AP.request({url: '/rest/api/3/search?fields=key&startAt='+(startAt*100)+'&maxResults=100', type: 'GET', success: function(responseText){
+    console.log("GT res: "+ responseText);
+    let data = JSON.parse(responseText);
+    if(data.issues.length===0)
+      return;
+    startAt++;
+    GT4();
+  }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});   
+}
+
+
 </script>
 </head>
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="GT2()">GoGOGOGOGOOGOG</button>
+<button onclick="GT3()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
