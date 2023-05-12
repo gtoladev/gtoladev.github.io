@@ -125,6 +125,7 @@ function GT2() {
       AP.request({url: '/rest/api/3/search?fields=key&startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
         console.log("GT res: "+ responseText);
         let data = JSON.parse(responseText);
+        GT2();
       }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});  
     }
   } else {
