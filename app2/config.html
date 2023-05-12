@@ -122,13 +122,13 @@ function GT2() {
   if(startAt===null) {
     startAt = { i:0 };
     for(startAt.i =0;startAt.i<10; startAt.i++) {
-      AP.request({url: '/rest/api/3/search?fields=key,startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
+      AP.request({url: '/rest/api/3/search?fields=key&startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
         console.log("GT res: "+ responseText);
         let data = JSON.parse(responseText);
       }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});  
     }
   } else {
-    AP.request({url: '/rest/api/3/search?fields=key,startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
+    AP.request({url: '/rest/api/3/search?fields=key&startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
       //if(startAt.i>30)
       //  return;
       console.log("GT res: "+ responseText); 
