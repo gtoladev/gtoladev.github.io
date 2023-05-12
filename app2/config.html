@@ -129,8 +129,8 @@ function GT2() {
     }
   } else {
     AP.request({url: '/rest/api/3/search?fields=key,startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
-      if(startAt.i>30)
-        return;
+      //if(startAt.i>30)
+      //  return;
       console.log("GT res: "+ responseText); 
       let data = JSON.parse(responseText); 
       startAt.i=startAt.i+1
