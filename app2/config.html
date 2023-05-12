@@ -114,12 +114,38 @@ function createCustomField() {
     }
   });
 }
+
+
+
+var startAt=null;
+function GT2() {   
+  if(startAt===null) {
+    startAt = { i:0 };
+    for(startAt.i =0;startAt.i<10; startAt.i++) {
+      AP.request({url: '/rest/api/3/search?fields=key,startAt='+(i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
+        console.log("GT res: "+ responseText);
+        let data = JSON.parse(responseText);
+        GT(); 
+      }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});  
+    }
+  } else {
+    AP.request({url: '/rest/api/3/search?fields=key,startAt='+(i*100)+'&maxResults=100', type: 'GET', success: function(responseText){
+      if(startAt.i>30)
+        return;
+      console.log("GT res: "+ responseText); 
+      let data = JSON.parse(responseText); 
+      startAt.i=startAt.i+1
+      GT(); 
+    }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});  
+  }
+}
+
 </script>
 </head>
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="GT()">GoGOGOGOGOOGOG</button>
+<button onclick="GT2()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
