@@ -47,7 +47,7 @@ async function manual() {
 function issues() {
 
 AP.request({
-    url: '/rest/api/3/statuses/search?startAt=0&maxResults=100&projectId=1000',
+    url: '/rest/api/3/statuses/search?startAt=0&maxResults=100&projectId=PROJ',
     type: 'GET',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
