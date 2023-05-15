@@ -117,25 +117,32 @@ function createCustomField() {
 
 var startAt=10;
 var retryCount=0;
-var retryAfterMiliseconds = 10000;
+var retryAfterMiliseconds = 100000;
 function GT3() {
   for(var i=0;i<startAt;i++)
     GT4(i);
 }
+var starded=0;
+var finished=0;
 function GT4(i) {
+  started++;
   var tmp = startAt;
   if(i)
     tmp = i;
   var tmpUrl = '/rest/api/3/search?fields=key&startAt='+(tmp*100)+'&maxResults=100';
   console.log(tmpUrl);
   AP.request({url: tmpUrl, type: 'GET', success: function(responseText){
+    finished++;
     //console.log("GT res: "+ responseText);
     let data = JSON.parse(responseText);
     if(data.issues.length===0)
       return;
     startAt++;
+    if(starded-finished>10)
+      console.log("GT threads exceeded");
     GT4();
   }, error: function(xhr, statusText, errorThrown){ 
+    finished++;
    // console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
     console.log("GT:retry");
     if(retryCount++<4000000)
