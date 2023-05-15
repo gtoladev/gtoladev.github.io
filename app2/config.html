@@ -47,7 +47,7 @@ async function manual() {
 function issues() {
 
 AP.request({
-    url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt=0&maxResults=100000',
+    url: '/rest/api/3/workflowscheme/project/PROJ',
     type: 'GET',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
@@ -59,29 +59,6 @@ AP.request({
     }
   });
 
-}
-
-function fn2workerURL(fn) {
-  const blob = new Blob([`(${fn.toString()})()`], { type: "text/javascript" });
-  return URL.createObjectURL(blob);
-}
-
-function workers() {
-  let running = 0;
-  for (let n = 0; n < 1; ++n) {
-      var workers1 = new Worker("worker.js");//"worker.js"  fn2workerURL(issues)
-      workers1.onmessage = workerDone;
-      workers1.postMessage(AP);
-      ++running;
-  }
-}
-
-function workerDone(e) {
-    --running;
-    console.log("Worker " + e.data.id + " is done, result: " + e.data.sum);
-    if (running === 0) {
-        console.log("All workers complete");
-    }
 }
 
 function GT(startAt) {
@@ -225,7 +202,7 @@ function calculate(DATA) {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="GT3()">GoGOGOGOGOOGOG</button>
+<button onclick="issues()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
