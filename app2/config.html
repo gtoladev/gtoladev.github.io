@@ -115,11 +115,11 @@ function createCustomField() {
   });
 }
 
-var startAt=0;
+var startAt=10;
 var retryCount=0;
-var retryAfterMiliseconds = 1000;
+var retryAfterMiliseconds = 10000;
 function GT3() {
-  for(var i=0;i<10;i++)
+  for(var i=0;i<startAt;i++)
     GT4(i);
 }
 function GT4(i) {
@@ -139,7 +139,7 @@ function GT4(i) {
    // console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
     console.log("GT:retry");
     if(retryCount++<4000000)
-      setTimeout(GT4(),retryAfterMiliseconds,startAt);
+      setTimeout(GT4(),retryAfterMiliseconds,startAt-1);
   }});   
 }
 
