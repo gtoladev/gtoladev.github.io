@@ -140,7 +140,8 @@ function GT4(i) {
     startAt++;
     if(starded-finished>10)
       console.log("GT threads exceeded");
-    GT4();
+    else
+      GT4();
   }, error: function(xhr, statusText, errorThrown){ 
     finished++;
    // console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
