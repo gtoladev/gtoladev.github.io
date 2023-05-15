@@ -122,7 +122,7 @@ function GT3() {
   for(var i=0;i<startAt;i++)
     GT4(i);
 }
-var starded=0;
+var started=0;
 var finished=0;
 function GT4(i) {
   started++;
@@ -138,7 +138,7 @@ function GT4(i) {
     if(data.issues.length===0)
       return;
     startAt++;
-    if(starded-finished>10)
+    if(started-finished>10)
       console.log("GT threads exceeded");
     else
       GT4();
