@@ -123,7 +123,10 @@ function GT3() {
     GT4(i);
 }
 function GT4(i) {
-  var tmpUrl = '/rest/api/3/search?fields=key&startAt='+((i?i:startAt)*100)+'&maxResults=100';
+  var tmp = startAt;
+  if(i)
+    tmp = i;
+  var tmpUrl = '/rest/api/3/search?fields=key&startAt='+((tmp*100)+'&maxResults=100';
   AP.request({url: tmpUrl, type: 'GET', success: function(responseText){
     console.log("GT res: "+ responseText);
     let data = JSON.parse(responseText);
