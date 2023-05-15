@@ -116,14 +116,15 @@ function createCustomField() {
 }
 
 var startAt=0;
+var retryCount=0;
+var retryAfterMiliseconds = 1000;
 function GT3() {
   for(var i=0;i<10;i++)
     GT4(i);
 }
 function GT4(i) {
-  if(i)
-    startAt=i;
-  AP.request({url: '/rest/api/3/search?fields=key&startAt='+(startAt*100)+'&maxResults=100', type: 'GET', success: function(responseText){
+  var tmpUrl = '/rest/api/3/search?fields=key&startAt='+((i?i:startAt)*100)+'&maxResults=100';
+  AP.request({url: tmpUrl, type: 'GET', success: function(responseText){
     console.log("GT res: "+ responseText);
     let data = JSON.parse(responseText);
     if(data.issues.length===0)
@@ -132,6 +133,9 @@ function GT4(i) {
     GT4();
   }, error: function(xhr, statusText, errorThrown){ 
     console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
+    console.log{"GT:retry"};
+    if(retryCount++<4000000)
+      setTimeout(GT4(),retryAfterMiliseconds,startAt);
   }});   
 }
 
