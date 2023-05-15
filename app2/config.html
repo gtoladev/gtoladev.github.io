@@ -129,14 +129,14 @@ function GT4(i) {
   var tmpUrl = '/rest/api/3/search?fields=key&startAt='+(tmp*100)+'&maxResults=100';
   console.log(tmpUrl);
   AP.request({url: tmpUrl, type: 'GET', success: function(responseText){
-    console.log("GT res: "+ responseText);
+    //console.log("GT res: "+ responseText);
     let data = JSON.parse(responseText);
     if(data.issues.length===0)
       return;
     startAt++;
     GT4();
   }, error: function(xhr, statusText, errorThrown){ 
-    console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
+   // console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
     console.log("GT:retry");
     if(retryCount++<4000000)
       setTimeout(GT4(),retryAfterMiliseconds,startAt);
