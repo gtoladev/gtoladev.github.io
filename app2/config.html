@@ -129,14 +129,18 @@ function GT4(i) {
   var tmp = startAt;
   if(i)
     tmp = i;
-  var tmpUrl = '/rest/api/3/search?fields=key&startAt='+(tmp*100)+'&maxResults=100';
+  var tmpUrl = '/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&startAt='+(tmp*100)+'&maxResults=100';
   console.log(tmpUrl);
   AP.request({url: tmpUrl, type: 'GET', success: function(responseText){
     finished++;
     //console.log("GT res: "+ responseText);
     let data = JSON.parse(responseText);
-    if(data.issues.length===0)
+    for(var j=0;j<data.issues.length;j++)
+      calculate(data.issues[j]);
+    if(data.issues.length===0) {
+      setTimeout(printStatuses(),3000);
       return;
+    }
     startAt++;
     if(started-finished>10)
       console.log("GT threads exceeded");
@@ -151,7 +155,75 @@ function GT4(i) {
   }});   
 }
 
+function printStatuses() {
+  var possibleKeys = {};
+  Object.keys(TIMES).forEach(function (key) {
+   possibleKeys[key]=1;
+  });
+  var output = "";
+  Object.keys(possibleKeys).forEach(function (key) {
+   output = key+",";
+  });
+  alert(output);
+}
 
+var TIMES={};
+function calculate(DATA) {
+  if(TIMES)
+    delete TIMES;
+  TIMES = {};
+  
+  let metric = 1000 * 60;
+  
+  let tmpDate = new Date(DATA.fields.created);
+  let tmpCardId = DATA.key;
+  let tmpList = DATA.transitions[0].name;
+  
+  //debugger;
+  
+  let startFrom = DATA.changelog.histories.length-1;
+  let moved = false;
+  let prevStatusAfterMove=null;
+  for(let i=0;i<DATA.changelog.histories.length && !moved;i++) {
+    for(let j=0;j<DATA.changelog.histories[i].items.length;j++) {
+      if(DATA.changelog.histories[i].items[j].field==="status") {
+        prevStatusAfterMove = DATA.changelog.histories[i].items[j].fromString;
+      } else if(DATA.changelog.histories[i].items[j].field==="project") {
+        tmpList=prevStatusAfterMove ? prevStatusAfterMove : DATA.fields.status.name;
+        tmpDate= new Date(DATA.changelog.histories[i].created);
+        startFrom = i;
+        moved=true;
+        break;
+      }
+    }
+  }
+  
+  TIMES[tmpCardId] = {};
+  TIMES[tmpCardId]['currentList']=tmpList;
+  TIMES[tmpCardId][tmpList] = {};
+  TIMES[tmpCardId][tmpList]['from']=tmpDate;
+  TIMES[tmpCardId][tmpList]['time']=0;
+  
+  for(let i=startFrom; i>=0; i--) {  
+    for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
+      if(DATA.changelog.histories[i].items[j].field==="status") {
+        tmpDate = new Date(DATA.changelog.histories[i].created);
+        let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
+        let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
+        TIMES[tmpCardId]['currentList']=tmpListAfter;     
+        if(TIMES[tmpCardId][tmpListBefore])
+          TIMES[tmpCardId][tmpListBefore]['time'] += (tmpDate-TIMES[tmpCardId][tmpListBefore]['from'])/metric;
+        if(!TIMES[tmpCardId][tmpListAfter])
+          TIMES[tmpCardId][tmpListAfter] = { time: 0};
+        TIMES[tmpCardId][tmpListAfter]['from'] = tmpDate;
+      }
+  }
+  
+  Object.keys(TIMES).forEach(function (key) {
+    let now = new Date();
+    TIMES[key][ TIMES[key]['currentList'] ]['time']+=(now-TIMES[key][ TIMES[key]['currentList'] ]['from'])/metric;
+  });
+}
 </script>
 </head>
 <body>
