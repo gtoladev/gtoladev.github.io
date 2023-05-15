@@ -137,7 +137,7 @@ function GT4(i) {
     GT4();
   }, error: function(xhr, statusText, errorThrown){ 
     console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
-    console.log{"GT:retry"};
+    console.log("GT:retry");
     if(retryCount++<4000000)
       setTimeout(GT4(),retryAfterMiliseconds,startAt);
   }});   
