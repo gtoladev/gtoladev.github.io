@@ -168,18 +168,14 @@ function printStatuses() {
 }
 
 var TIMES={};
-function calculate(DATA) {
-  if(TIMES)
-    delete TIMES;
-  TIMES = {};
-  
+function calculate(DATA) { 
   let metric = 1000 * 60;
   
   let tmpDate = new Date(DATA.fields.created);
   let tmpCardId = DATA.key;
   let tmpList = DATA.transitions[0].name;
   
-  debugger;
+  //debugger;
   
   let startFrom = DATA.changelog.histories.length-1;
   let moved = false;
