@@ -92,7 +92,7 @@ function createCustomField(statusName) {
     data: JSON.stringify({
       "description": "Time spent in "+statusName,
       "name": statusName,
-      "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+      "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:numberrange",
       "type": "com.atlassian.jira.plugin.system.customfieldtypes:float"
     }),
     success: function(responseText){
