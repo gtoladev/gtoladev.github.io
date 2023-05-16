@@ -66,7 +66,11 @@ function statuses() {
                   });
               });
 
+              var first=true;
               Object.keys(TIMES).forEach(function (key) {
+                if(!first)
+                  return;
+                first=false;
                 var postData = {};
                 postData["fields"]={};
                 Object.keys(TIMES[key]).forEach(function (key2) {
