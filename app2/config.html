@@ -74,23 +74,29 @@ function statuses() {
                 var postData = {};
                 postData["fields"]={};
                 Object.keys(TIMES[key]).forEach(function (key2) {
-                  if(key2!=='currentList')
+                  if(key2!=='currentList') {
                     postData["fields"][customFields['Duration In '+key2]]=TIMES[key][key2].time.toFixed(2);
-                });
+                    addFieldToDefaultScreen(customFields['Duration In '+key2],function() {
 
-                AP.request({
-                  url: '/rest/api/3/issue/'+key,
-                  type: 'PUT',
-                  contentType: 'application/json',
-                  headers: { Accept: 'application/json' },
-                  data: JSON.stringify(postData),
-                  success: function(responseText){
-                    console.log("success:"+responseText);
-                  },
-                  error: function(xhr, statusText, errorThrown){
-                    console.log("err: "+errorThrown);
+                      AP.request({
+                        url: '/rest/api/3/issue/'+key,
+                        type: 'PUT',
+                        contentType: 'application/json',
+                        headers: { Accept: 'application/json' },
+                        data: JSON.stringify(postData),
+                        success: function(responseText){
+                          console.log("success:"+responseText);
+                        },
+                        error: function(xhr, statusText, errorThrown){
+                          console.log("err: "+errorThrown);
+                        }
+                      });
+
+                    })
                   }
                 });
+                
+
 
 
               });
@@ -161,7 +167,7 @@ function createScreen(callback) {
   });
 }
 
-function addFieldToDefaultScreen(fieldId) {
+function addFieldToDefaultScreen(fieldId,callback) {
   AP.request({
     url: '/rest/api/3/screens/addToDefault/'+fieldId,
     type: 'POST',
