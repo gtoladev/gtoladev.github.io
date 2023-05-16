@@ -170,7 +170,8 @@ function GT4(i,callback) {
     for(var j=0;j<data.issues.length;j++)
       calculate(data.issues[j]);
     if(data.issues.length===0) {
-      setTimeout(printStatuses(),3000);
+      //setTimeout(,3000);
+      callback();
       return;
     }
     startAt++;
