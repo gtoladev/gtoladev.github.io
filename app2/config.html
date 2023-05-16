@@ -101,14 +101,44 @@ function statuses() {
       var possibleKeys = {};
       Object.keys(TIMES).forEach(function (key) {
         Object.keys(TIMES[key]).forEach(function (key2) {
-         possibleKeys[key2]=1;
+          if(!key2==='currentList')
+            possibleKeys[key2]=1;
         });
       });
-      var output = "";
       Object.keys(possibleKeys).forEach(function (key) {
-       output += key+",";
+        if(!customFields['Duration In '+key])
+          createCustomField('Duration In '+key, function(arg1) {
+            customFields[arg1.name]=arg1.id;
+          });
       });
-      console.log(output);
+
+      Object.keys(TIMES).forEach(function (key) {
+        var postData = {};
+        postData["fields"]={};
+        Object.keys(TIMES[key]).forEach(function (key2) {
+          if(!key2==='currentList')
+            postData["fields"][customFields[key2]]=TIMES[key][key2];
+        });
+
+        AP.request({
+          url: '/rest/api/3/issue/'+key,
+          type: 'PUT',
+          contentType: 'application/json',
+          headers: { Accept: 'application/json' },
+          data: JSON.stringify(postData),
+          success: function(responseText){
+            console.log("success:"+responseText);
+          },
+          error: function(xhr, statusText, errorThrown){
+            console.log("err: "+errorThrown);
+          }
+        });
+
+
+      });
+ 
+      
+
     });
     
     
