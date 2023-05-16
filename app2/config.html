@@ -44,7 +44,7 @@ async function manual() {
 
 function paginate(path, startAt, result, onDoneCallback) {
   AP.request({
-    url: path+(path.includes('?') ? '&' : '?')  +'startAt='+startAt+'&maxResults=2',
+    url: path+(path.includes('?') ? '&' : '?')  +'startAt='+startAt+'&maxResults=10000',
     type: 'GET',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
@@ -67,23 +67,10 @@ function paginate(path, startAt, result, onDoneCallback) {
 
 function statuses() {
   paginate('/rest/api/3/statuses/search?projectId=10000',0,[],function(data){
-    alert(data.length);
+    for(var i=0;i<data.length; i++) {
+      createCustomField(data[i].name)
+    };
   });
-
-
-<!-- AP.request({ -->
-    <!-- url: '/rest/api/3/statuses/search?startAt=0&maxResults=100&projectId=10000', -->
-    <!-- type: 'GET', -->
-    <!-- contentType: 'application/json', -->
-    <!-- headers: { Accept: 'application/json' }, -->
-    <!-- success: function(responseText){ -->
-      <!-- console.log("success:"+responseText); -->
-    <!-- }, -->
-    <!-- error: function(xhr, statusText, errorThrown){ -->
-      <!-- console.log("err: "+errorThrown); -->
-    <!-- } -->
-  <!-- }); -->
-
 }
 
 function GT(startAt) {
@@ -96,23 +83,23 @@ function GT(startAt) {
   }
 }
 
-function createCustomField() {
+function createCustomField(statusName) {
   AP.request({
     url: '/rest/api/3/field',
     type: 'POST',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
     data: JSON.stringify({
-      "description": "Custom field for picking groups",
-      "name": "New custom field",
-      "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:grouppickersearcher",
-      "type": "com.atlassian.jira.plugin.system.customfieldtypes:grouppicker"
+      "description": "Time spent in "+statusName,
+      "name": statusName,
+      "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+      "type": "com.atlassian.jira.plugin.system.customfieldtypes:float"
     }),
     success: function(responseText){
-      alert("success:"+responseText);
+      console.log("success:"+responseText);
     },
     error: function(xhr, statusText, errorThrown){
-      alert("err: "+errorThrown);
+      console.log("err: "+errorThrown);
     }
   });
 }
