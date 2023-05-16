@@ -2,7 +2,23 @@
 <html lang="en">
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
-<script>
+<script>.
+function updateIssue() {
+  AP.request({
+    url: '/rest/api/3/search',
+    type: 'GET',
+    contentType: 'application/json',
+    headers: { Accept: 'application/json' },
+    success: function(responseText){
+      console.log("success:"+responseText);
+    },
+    error: function(xhr, statusText, errorThrown){
+      console.log("err: "+errorThrown);
+    }
+  });
+}
+
+
 async function manual() {
   var token = document.getElementById("jwt").value;
   var body = {
@@ -214,7 +230,7 @@ function calculate(DATA) {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="statuses()">GoGOGOGOGOOGOG</button>
+<button onclick="updateIssue()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
