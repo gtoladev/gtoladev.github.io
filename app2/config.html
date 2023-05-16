@@ -42,22 +42,47 @@ async function manual() {
 
 }
 
-
-
-function issues() {
-
-AP.request({
-    url: '/rest/api/3/statuses/search?startAt=0&maxResults=100&projectId=10000',
+function paginate(path, startAt, result, onDoneCallback) {
+  AP.request({
+    url: path+'startAt='+startAt+'&maxResults=10000',
     type: 'GET',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
     success: function(responseText){
+      var items = JSON.parse(responseText);
+      if(items.length>0) {
+        result = result.concat(items);
+        paginate(path, startAt+items.length, result);
+      } else {
+        onDoneCallback(result);
+      }
       console.log("success:"+responseText);
     },
     error: function(xhr, statusText, errorThrown){
       console.log("err: "+errorThrown);
     }
   });
+}
+
+
+function statuses() {
+  paginate('/rest/api/3/statuses/search?projectId=10000',0,{},function(data){
+    debugger;
+  });
+
+
+<!-- AP.request({ -->
+    <!-- url: '/rest/api/3/statuses/search?startAt=0&maxResults=100&projectId=10000', -->
+    <!-- type: 'GET', -->
+    <!-- contentType: 'application/json', -->
+    <!-- headers: { Accept: 'application/json' }, -->
+    <!-- success: function(responseText){ -->
+      <!-- console.log("success:"+responseText); -->
+    <!-- }, -->
+    <!-- error: function(xhr, statusText, errorThrown){ -->
+      <!-- console.log("err: "+errorThrown); -->
+    <!-- } -->
+  <!-- }); -->
 
 }
 
@@ -202,7 +227,7 @@ function calculate(DATA) {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="issues()">GoGOGOGOGOOGOG</button>
+<button onclick="statuses()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
