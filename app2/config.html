@@ -177,6 +177,7 @@ function addFieldToDefaultScreen(fieldId,callback) {
       console.log("success:"+responseText);
     },
     error: function(xhr, statusText, errorThrown){
+      callback();
       console.log("err: "+errorThrown);
     }
   });
