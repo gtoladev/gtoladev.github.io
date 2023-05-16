@@ -67,7 +67,7 @@ function paginate(path, startAt, result, onDoneCallback) {
 
 function statuses() {
   paginate('/rest/api/3/statuses/search?projectId=10000',0,[],function(data){
-    debugger;
+    alert(data.length);
   });
 
 
