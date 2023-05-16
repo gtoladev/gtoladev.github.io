@@ -117,7 +117,7 @@ function statuses() {
         postData["fields"]={};
         Object.keys(TIMES[key]).forEach(function (key2) {
           if(key2!=='currentList')
-            postData["fields"][customFields['Duration In '+key2]]=TIMES[key][key2];
+            postData["fields"][customFields['Duration In '+key2]]=TIMES[key][key2].time.toFixed(2);
         });
 
         AP.request({
