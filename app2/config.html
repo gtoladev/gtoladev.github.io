@@ -52,7 +52,7 @@ function paginate(path, startAt, result, onDoneCallback) {
       var items = JSON.parse(responseText).values;
       if(items.length>0) {
         result = result.concat(items);
-        paginate(path, startAt+items.length, result);
+        paginate(path, startAt+items.length, result, onDoneCallback);
       } else {
         onDoneCallback(result);
       }
