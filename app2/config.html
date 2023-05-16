@@ -101,7 +101,7 @@ function statuses() {
       var possibleKeys = {};
       Object.keys(TIMES).forEach(function (key) {
         Object.keys(TIMES[key]).forEach(function (key2) {
-          if(!key2==='currentList')
+          if(!key2!=='currentList')
             possibleKeys[key2]=1;
         });
       });
@@ -116,8 +116,8 @@ function statuses() {
         var postData = {};
         postData["fields"]={};
         Object.keys(TIMES[key]).forEach(function (key2) {
-          if(!key2==='currentList')
-            postData["fields"][customFields[key2]]=TIMES[key][key2];
+          if(key2!=='currentList')
+            postData["fields"][customFields['Duration In '+key2]]=TIMES[key][key2];
         });
 
         AP.request({
