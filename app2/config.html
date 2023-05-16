@@ -44,7 +44,7 @@ async function manual() {
 
 function paginate(path, startAt, result, onDoneCallback) {
   AP.request({
-    url: path+'startAt='+startAt+'&maxResults=2',
+    url: path+(path.includes('?') ? '&' : '?')  +'startAt='+startAt+'&maxResults=2',
     type: 'GET',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
