@@ -82,11 +82,37 @@ function paginate(path, startAt, result, onDoneCallback) {
 
 
 function statuses() {
-  paginate('/rest/api/3/statuses/search?projectId=10000',0,[],function(data){
-    for(var i=0;i<data.length; i++) {
-      createCustomField(data[i].name)
-    };
+  paginate('rest/api/3/field/search?type=custom&query=Duration%20In%20',0,[],function(data){
+    var customFields = {};
+    if(data.values.length>0) {
+      for(var i=0;i<data.values.length; i++)
+        customFields[data.values[i].name]=data.values[i].id;
+    } else {
+      paginate('/rest/api/3/statuses/search?projectId=10000',0,[],function(data){
+        for(var i=0;i<data.length; i++)
+          createCustomField('Duration In '+data[i].name, function(arg1) {
+            customFields[arg1.name]=arg1.id;
+          });
+      });
+    }
+    
+  for(var i=0;i<startAt;i++)
+    GT4(i, function(){
+      var possibleKeys = {};
+      Object.keys(TIMES).forEach(function (key) {
+       possibleKeys[key]=1;
+      });
+      var output = "";
+      Object.keys(possibleKeys).forEach(function (key) {
+       output += key+",";
+      });
+      console.log(output);
+    });
+    
+    
+    
   });
+
 }
 
 function GT(startAt) {
@@ -99,19 +125,20 @@ function GT(startAt) {
   }
 }
 
-function createCustomField(statusName) {
+function createCustomField(statusName, callback) {
   AP.request({
     url: '/rest/api/3/field',
     type: 'POST',
     contentType: 'application/json',
     headers: { Accept: 'application/json' },
     data: JSON.stringify({
-      "description": "Time spent in "+statusName,
+      "description": statusName +' Status',
       "name": statusName,
       "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:numberrange",
       "type": "com.atlassian.jira.plugin.system.customfieldtypes:float"
     }),
     success: function(responseText){
+      callback(JSON.parse(responseText));
       console.log("success:"+responseText);
     },
     error: function(xhr, statusText, errorThrown){
@@ -129,7 +156,7 @@ function GT3() {
 }
 var started=0;
 var finished=0;
-function GT4(i) {
+function GT4(i,callback) {
   started++;
   var tmp = startAt;
   if(i)
@@ -150,13 +177,13 @@ function GT4(i) {
     if(started-finished>10)
       console.log("GT threads exceeded");
     else
-      GT4();
+      GT4(undefined, callback);
   }, error: function(xhr, statusText, errorThrown){ 
     finished++;
    // console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
     console.log("GT:retry");
     if(retryCount++<4000000)
-      setTimeout(GT4(),retryAfterMiliseconds,startAt-1);
+      setTimeout(GT4(),retryAfterMiliseconds,startAt-1, callback);
   }});   
 }
 
