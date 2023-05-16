@@ -100,7 +100,9 @@ function statuses() {
     GT4(i, function(){
       var possibleKeys = {};
       Object.keys(TIMES).forEach(function (key) {
-       possibleKeys[key]=1;
+        Object.keys(TIMES[key]).forEach(function (key2) {
+         possibleKeys[key2]=1;
+        });
       });
       var output = "";
       Object.keys(possibleKeys).forEach(function (key) {
