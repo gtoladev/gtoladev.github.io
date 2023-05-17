@@ -4,48 +4,43 @@
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
 function test1(){
-  var customFieldId='customfield_10071';
-  var issueKey='10000';
-  var postCustomfieldData = {};
-  postCustomfieldData['fields']={};
-  postCustomfieldData['fields'][customFieldId]=1.234;
+  paginate('/rest/api/2/screenscheme', 0, [], function(data){
   
-  AP.request({
-    url: '/rest/api/3/issue/'+issueKey,
-    type: 'PUT',
-    contentType: 'application/json',
-    headers: { Accept: 'application/json' },
-    data: JSON.stringify(postCustomfieldData),
-    success: function(responseText){
-      console.log("success:"+responseText);
-    },
-    error: function(xhr, statusText, errorThrown){
-      console.log("err: "+errorThrown);
-    }
-  });
-
-  return;
-
-  AP.request({url: '/rest/api/2/screens', type: 'GET', headers: { Accept: 'application/json' },
-    success: function(screensText){
-      var screensData = JSON.parse(screensText);
-      console.log("success:"+screensText);
-      
-      AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
+    for(var i=0;i<data.values.length;i++) {
+      var screenId = data.values.screens.edit;
+      AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
         success: function(tabsText){
           var tabsData = JSON.parse(tabsText);
           console.log("success:"+tabsText);
           
           var postData = {};
           postData['fieldId']=customFieldId;
-          AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs/'+tabsData[0].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
+          AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs/'+tabsData[0].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
             success: function(addTotabText){
               var addTotabsData = JSON.parse(addTotabText);
               console.log("success:"+addTotabText);
              
-              addFieldToDefaultScreen(customFieldId,function() {
- 
-              })
+              //addFieldToDefaultScreen(customFieldId,function() {              })
+              
+              var customFieldId='customfield_10071';
+              var issueKey='10000';
+              var postCustomfieldData = {};
+              postCustomfieldData['fields']={};
+              postCustomfieldData['fields'][customFieldId]=1.234;
+              
+              AP.request({
+                url: '/rest/api/3/issue/'+issueKey,
+                type: 'PUT',
+                contentType: 'application/json',
+                headers: { Accept: 'application/json' },
+                data: JSON.stringify(postCustomfieldData),
+                success: function(responseText){
+                  console.log("success:"+responseText);
+                },
+                error: function(xhr, statusText, errorThrown){
+                  console.log("err: "+errorThrown);
+                }
+              });
               
               
             },
@@ -60,6 +55,21 @@ function test1(){
           console.log("err: "+errorThrown);
         }
       });
+    
+    }
+  
+  });
+
+
+
+  return;
+
+  AP.request({url: '/rest/api/2/screens', type: 'GET', headers: { Accept: 'application/json' },
+    success: function(screensText){
+      var screensData = JSON.parse(screensText);
+      console.log("success:"+screensText);
+      
+
       
     },
     error: function(xhr, statusText, errorThrown){
