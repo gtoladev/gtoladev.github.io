@@ -8,7 +8,7 @@ function test1(){
 
   AP.request({url: '/rest/api/2/screens', type: 'GET', headers: { Accept: 'application/json' },
     success: function(screensText){
-      var screensData = JSON.parse(screensText));
+      var screensData = JSON.parse(screensText);
       console.log("success:"+screensText);
       
       AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
