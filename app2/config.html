@@ -5,6 +5,26 @@
 <script>
 function test1(){
   var customFieldId='customfield_10071';
+  var issueKey='10000';
+  var postCustomfieldData = {};
+  postCustomfieldData['fields']={};
+  postCustomfieldData['fields'][customFieldId]=1.234;
+  
+  AP.request({
+    url: '/rest/api/3/issue/'+issuekey,
+    type: 'PUT',
+    contentType: 'application/json',
+    headers: { Accept: 'application/json' },
+    data: JSON.stringify(postCustomfieldData),
+    success: function(responseText){
+      console.log("success:"+responseText);
+    },
+    error: function(xhr, statusText, errorThrown){
+      console.log("err: "+errorThrown);
+    }
+  });
+
+  return;
 
   AP.request({url: '/rest/api/2/screens', type: 'GET', headers: { Accept: 'application/json' },
     success: function(screensText){
@@ -22,24 +42,9 @@ function test1(){
             success: function(addTotabText){
               var addTotabsData = JSON.parse(addTotabText);
               console.log("success:"+addTotabText);
-              
-              var postCustomfieldData = {};
-              postCustomfieldData['fields']={};
-              postCustomfieldData['fields'][customFieldId]=1.234;
+             
               addFieldToDefaultScreen(customFieldId,function() {
-                AP.request({
-                  url: '/rest/api/3/issue/'+key,
-                  type: 'PUT',
-                  contentType: 'application/json',
-                  headers: { Accept: 'application/json' },
-                  data: JSON.stringify(postCustomfieldData),
-                  success: function(responseText){
-                    console.log("success:"+responseText);
-                  },
-                  error: function(xhr, statusText, errorThrown){
-                    console.log("err: "+errorThrown);
-                  }
-                });
+ 
               })
               
               
