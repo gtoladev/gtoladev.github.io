@@ -3,6 +3,81 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
+function test1(){
+  var customFieldId='customfield_11000';
+
+  AP.request({url: '/rest/api/2/screens', type: 'GET', headers: { Accept: 'application/json' },
+    success: function(screensText){
+      var screensData = JSON.parse(screensText));
+      console.log("success:"+screensText);
+      
+      AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
+        success: function(tabsText){
+          var tabsData = JSON.parse(tabsText));
+          console.log("success:"+tabsText);
+          
+          var postData = {};
+          postData['fieldId']=customFieldId;
+          AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs/'+tabsData[0].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
+            success: function(addTotabText){
+              var addTotabsData = JSON.parse(addTotabText));
+              console.log("success:"+addTotabText);
+              
+              var postCustomfieldData = {};
+              postCustomfieldData['fields']={};
+              postCustomfieldData['fields'][customFieldId]=1.234;
+              addFieldToDefaultScreen(customFieldId,function() {
+                AP.request({
+                  url: '/rest/api/3/issue/'+key,
+                  type: 'PUT',
+                  contentType: 'application/json',
+                  headers: { Accept: 'application/json' },
+                  data: JSON.stringify(postCustomfieldData),
+                  success: function(responseText){
+                    console.log("success:"+responseText);
+                  },
+                  error: function(xhr, statusText, errorThrown){
+                    console.log("err: "+errorThrown);
+                  }
+                });
+              })
+              
+              
+            },
+            error: function(xhr, statusText, errorThrown){
+              console.log("err: "+errorThrown);
+            }
+          });
+          
+          
+        },
+        error: function(xhr, statusText, errorThrown){
+          console.log("err: "+errorThrown);
+        }
+      });
+      
+    },
+    error: function(xhr, statusText, errorThrown){
+      console.log("err: "+errorThrown);
+    }
+  });
+}
+
+function addFieldToTab(fieldId,callback) {
+  AP.request({
+    url: '/rest/api/2/screens/{screenId}/tabs/{tabId}/fields',
+    type: 'POST',
+    headers: { Accept: 'application/json' },
+    success: function(responseText){
+      callback(JSON.parse(responseText));
+      console.log("success:"+responseText);
+    },
+    error: function(xhr, statusText, errorThrown){
+      callback();
+      console.log("err: "+errorThrown);
+    }
+  });
+}
 
 function paginate(path, startAt, result, onDoneCallback) {
   AP.request({
@@ -294,7 +369,7 @@ function calculate(DATA) {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="statuses()">GoGOGOGOGOOGOG</button>
+<button onclick="test1()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
