@@ -40,55 +40,56 @@ function test1(){
           postCustomfieldData['fields']={};
           postCustomfieldData['fields'][customFieldId]=1.234;
           
-          AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs/'+tabsData[0].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
-            success: function(addTotabText){
-              var addTotabsData = JSON.parse(addTotabText);
-              console.log("success:"+addTotabText);
-             
-              //addFieldToDefaultScreen(customFieldId,function() {              })
-              
-              var issueKey='10000';
-              var postCustomfieldData = {};
-              postCustomfieldData['fields']={};
-              postCustomfieldData['fields'][customFieldId]=1.234;
-              
-              AP.request({
-                url: '/rest/api/3/issue/'+issueKey,
-                type: 'PUT',
-                contentType: 'application/json',
-                headers: { Accept: 'application/json' },
-                data: JSON.stringify(postCustomfieldData),
-                success: function(responseText){
-                  console.log("success:"+responseText);
-                },
-                error: function(xhr, statusText, errorThrown){
-                  console.log("err: "+errorThrown);
-                }
-              });
-              
-              
-            },
-            error: function(xhr, statusText, errorThrown){
-              console.log("err: "+errorThrown);
-              
-              AP.request({
-                url: '/rest/api/3/issue/'+issueKey,
-                type: 'PUT',
-                contentType: 'application/json',
-                headers: { Accept: 'application/json' },
-                data: JSON.stringify(postCustomfieldData),
-                success: function(responseText){
-                  console.log("success:"+responseText);
-                },
-                error: function(xhr, statusText, errorThrown){
-                  console.log("err: "+errorThrown);
-                }
-              });
-              
-              
-            }
-          });
-          
+          for(var j=0;j<tabsData.length; j++) {
+            AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs/'+tabsData[j].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
+              success: function(addTotabText){
+                var addTotabsData = JSON.parse(addTotabText);
+                console.log("success:"+addTotabText);
+               
+                //addFieldToDefaultScreen(customFieldId,function() {              })
+                
+                var issueKey='10000';
+                var postCustomfieldData = {};
+                postCustomfieldData['fields']={};
+                postCustomfieldData['fields'][customFieldId]=1.234;
+                
+                AP.request({
+                  url: '/rest/api/3/issue/'+issueKey,
+                  type: 'PUT',
+                  contentType: 'application/json',
+                  headers: { Accept: 'application/json' },
+                  data: JSON.stringify(postCustomfieldData),
+                  success: function(responseText){
+                    console.log("success:"+responseText);
+                  },
+                  error: function(xhr, statusText, errorThrown){
+                    console.log("err: "+errorThrown);
+                  }
+                });
+                
+                
+              },
+              error: function(xhr, statusText, errorThrown){
+                console.log("err: "+errorThrown);
+                
+                AP.request({
+                  url: '/rest/api/3/issue/'+issueKey,
+                  type: 'PUT',
+                  contentType: 'application/json',
+                  headers: { Accept: 'application/json' },
+                  data: JSON.stringify(postCustomfieldData),
+                  success: function(responseText){
+                    console.log("success:"+responseText);
+                  },
+                  error: function(xhr, statusText, errorThrown){
+                    console.log("err: "+errorThrown);
+                  }
+                });
+                
+                
+              }
+            });
+          }
           
         },
         error: function(xhr, statusText, errorThrown){
