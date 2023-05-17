@@ -13,14 +13,14 @@ function test1(){
       
       AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
         success: function(tabsText){
-          var tabsData = JSON.parse(tabsText));
+          var tabsData = JSON.parse(tabsText);
           console.log("success:"+tabsText);
           
           var postData = {};
           postData['fieldId']=customFieldId;
           AP.request({url: '/rest/api/2/screens/'+screensData.values[0].id+'/tabs/'+tabsData[0].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
             success: function(addTotabText){
-              var addTotabsData = JSON.parse(addTotabText));
+              var addTotabsData = JSON.parse(addTotabText);
               console.log("success:"+addTotabText);
               
               var postCustomfieldData = {};
