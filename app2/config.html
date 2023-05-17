@@ -6,8 +6,8 @@
 function test1(){
   paginate('/rest/api/2/screenscheme', 0, [], function(data){
   
-    for(var i=0;i<data.values.length;i++) {
-      var screenId = data.values.screens.default;
+    for(var i=0;i<data.length;i++) {
+      var screenId = data[0].screens.default;
       AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
         success: function(tabsText){
           var tabsData = JSON.parse(tabsText);
