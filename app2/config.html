@@ -3,9 +3,27 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
-function test1(){
-  paginate('/rest/api/2/screenscheme', 0, [], function(data){
+
+function test2(){
+
+  createCustomField("GT", function(data){
   
+    
+    
+  })
+
+}
+
+function test1(){
+ // paginate('/rest/api/2/screenscheme', 0, [], function(data){
+  
+    createCustomField("GT", function(field){
+  
+    
+    
+  
+  
+    var data = [ { 'screens': { 'default': 10002} }, { 'screens': { 'default': 10003} } ]
     for(var i=0;i<data.length;i++) {
       var screenId = data[i].screens.default;
       AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
@@ -13,7 +31,7 @@ function test1(){
           var tabsData = JSON.parse(tabsText);
           console.log("success:"+tabsText);
           
-          var customFieldId='customfield_10071';
+          var customFieldId=field.id;//'customfield_10071';
           var postData = {};
           postData['fieldId']=customFieldId;
           
@@ -80,7 +98,9 @@ function test1(){
     
     }
   
+  
   });
+  //});
 
 
 
