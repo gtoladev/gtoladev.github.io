@@ -3,16 +3,134 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
+function main() {
+  //1. GET ISSUES and CALCULATE
+  getIssues(function(getIssuesResult) {   
+    //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
+    getMissingCustomFields(getIssuesResult,function(missingCustomFieldsResult) {
+      //3. CREATE MISSING CUSTOM FIELDS   
 
-function test2(){
+    });
+    
+  });
 
-  createCustomField("GT", function(data){
+
   
-    
-    
-  })
 
+  
+  //4. ADD CUSTOM FIELDS TO SCREENS
+  
+  //5. UPDATE ISSUES
+  
+  //6. REMOVE CUSTOM FIELDS FROM SCREENS
+
+
+
+
+
+
+  function getIssues(doneCallback) {
+    var result = { times: {}, existingCustomFields: {}};
+    doMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100','issues', 10, 
+    function(data) {
+      for(var j=0;j<data.issues.length;j++)
+        calculate(data.issues[j],result.times,result.existingCustomFields);
+    }
+    , function() {
+      doneCallback(result);
+    });
+  }
+
+  function getMissingCustomFields(getIssuesResult, doneCallback) {
+    var allFields = {};
+    var missing = [];
+    doMultithread('/rest/api/3/field/search?type=custom&query=Duration%20In%20&maxResults=100','values', 3, 
+    function(data) {
+      for(var j=0;j<data.values.length;j++)
+        allFields[data.values[i].name]=data.values[i].id;
+    }
+    , function() {
+      var missingCustomFieds = {};
+      var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
+      for(var i=0;i<inTimesKeys.length;i++) {
+        if(!allFields[getIssuesResult.existingCustomFields[inTimesKeys[i]]])
+          missing.push(inTimesKeys[i]);
+      }
+      doneCallback(missing);
+    });
+  }
+
+  function doMultithread(url, xpath, threads, responseCallback, doneCallback) {
+    var sharedStart=0;
+    var sharedDone=false;
+    var sharedStarted=0;
+    var sharedFinished=0;
+    //xpath,url
+
+    run(threads,doneCallback);
+
+    function run(threads, doneCallback){   
+      sharedStart=threads;
+      sharedDone=false;
+      sharedStarted=0;
+      sharedFinished=0;
+
+      for(var i=0;i<sharedStart;)
+        nea(i++, function() { doneCallback(); } );
+    }
+
+    function nea(tmpUrl, doneCallback, retry) {
+       if(sharedDone && sharedFinished===sharedStarted && !retry){
+           doneCallback();
+       } else {
+         if(!sharedDone || retry) {
+          sharedStarted++;
+          AP.request({url: url+'&startAt'+(tmpUrl*100), type: 'GET', success: function(responseText){    
+             let data = JSON.parse(responseText);
+             if(data[xPath].length===0) 
+              sharedDone=true;
+             sharedFinished++;
+             console.log(tmpUrl);
+             
+             responseCallback(data);
+             
+             nea(sharedStart++,callback);
+          }, error: function(xhr, statusText, errorThrown){  
+            sharedFinished++;
+             console.log("GT:retry " +tmpUrl );
+             if(retryCount++<4000000)
+                 nea(tmpUrl,callback, true);
+          } });	
+        }
+      }
+    }
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function test1(){
  // paginate('/rest/api/2/screenscheme', 0, [], function(data){
@@ -369,8 +487,8 @@ function printStatuses() {
   alert(output);
 }
 
-var TIMES={};
-function calculate(DATA) { 
+
+function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) { 
   let metric = 1000 * 60;
   
   let tmpDate = new Date(DATA.fields.created);
@@ -402,12 +520,18 @@ function calculate(DATA) {
   TIMES[tmpCardId][tmpList]['from']=tmpDate;
   TIMES[tmpCardId][tmpList]['time']=0;
   
+  CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpList]="";
+  
   for(let i=startFrom; i>=0; i--) {  
     for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
       if(DATA.changelog.histories[i].items[j].field==="status") {
         tmpDate = new Date(DATA.changelog.histories[i].created);
         let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
         let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
+        
+        CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListBefore]="";
+        CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListAfter]="";
+        
         TIMES[tmpCardId]['currentList']=tmpListAfter;     
         if(TIMES[tmpCardId][tmpListBefore])
           TIMES[tmpCardId][tmpListBefore]['time'] += (tmpDate-TIMES[tmpCardId][tmpListBefore]['from'])/metric;
@@ -417,17 +541,21 @@ function calculate(DATA) {
       }
   }
   
-  Object.keys(TIMES).forEach(function (key) {
+  var timesCounter=0;
+  var keys = Object.keys(TIMES);
+  for(var i=0;i<keys.length;i++) {
+    var key = keys[i];
     let now = new Date();
     TIMES[key][ TIMES[key]['currentList'] ]['time']+=(now-TIMES[key][ TIMES[key]['currentList'] ]['from'])/metric;
-  });
+    timesCounter++;
+  }
 }
 </script>
 </head>
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="test1()">GoGOGOGOGOOGOG</button>
+<button onclick="main()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
