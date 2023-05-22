@@ -83,7 +83,7 @@ function main() {
       for(var j=0;j<times.length;j++) {
         var tmpStatus = times[j];
         if(tmpStatus!=='currentList')
-          postCustomfieldData['fields'][getIssuesResult.existingCustomFields['Duration In '+tmpStatus]]=getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3);      }
+          postCustomfieldData['fields'][getIssuesResult.existingCustomFields['Duration In '+tmpStatus]]=parseFloat(getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3));      }
     
       urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
     }
