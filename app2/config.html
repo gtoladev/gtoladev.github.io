@@ -227,6 +227,8 @@ function main() {
        if(tmpUrl>=max){
            callback(ii);
        } else {
+        if(!urlsAndPostDatas[tmpUrl])
+          console.log('here');
          AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
            console.log(urlsAndPostDatas[tmpUrl].url);
            responseCallback(JSON.parse(data),tmpUrl);
