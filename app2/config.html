@@ -191,7 +191,8 @@ function main() {
         
       }, function(argument,argument2) {
         //response
-        tabs.push({"tab":argument.id, "screen":screens[argument2]});
+        for(var k=0;k<argument.id;k++)
+          tabs.push({"tab":argument[k].id, "screen":screens[argument2]});
       });
     });
   }
