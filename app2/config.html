@@ -228,7 +228,7 @@ function main() {
            callback(ii);
        } else {
          AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
-           console.log(tmpUrl);
+           console.log(urlsAndPostDatas[tmpUrl].url);
            responseCallback(JSON.parse(data),tmpUrl);
            nea1(ii, tmpUrl+1,max,callback, method,urlsAndPostDatas, responseCallback);
         }, error: function(xhr, statusText, errorThrown){  
