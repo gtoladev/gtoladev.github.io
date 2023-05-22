@@ -232,11 +232,11 @@ function main() {
          AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
            console.log(urlsAndPostDatas[tmpUrl].url);
            responseCallback(JSON.parse(data),tmpUrl);
-           nea1(ii, tmpUrl+1,max,callback, method,urlsAndPostDatas, responseCallback);
+           nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
         }, error: function(xhr, statusText, errorThrown){  
            console.log("GT:retry " +tmpUrl );
            if(retryCount++<4000000)
-               nea1(ii, tmpUrl, max, callback, method,urlsAndPostDatas, responseCallback);
+               nea1(ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
         } }); 
       }
     }
