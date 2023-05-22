@@ -283,7 +283,7 @@ function main() {
        } else {
          if(!sharedDone || retry) {
           sharedStarted++;
-          AP.request({url: url+'&startAt'+(tmpUrl*100), type: 'GET', success: function(responseText){    
+          AP.request({url: url+'&startAt='+(tmpUrl*100), type: 'GET', success: function(responseText){    
              let data = JSON.parse(responseText);
              if(data[xpath].length===0) 
               sharedDone=true;
