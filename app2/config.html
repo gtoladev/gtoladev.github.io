@@ -110,7 +110,7 @@ function main() {
 
   function getIssues(doneCallback) {
     var result = { times: {}, existingCustomFields: {}};
-    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100','issues', 10, 
+    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100&jql=project=PROJ2','issues', 10, 
     function(data) {
       for(var j=0;j<data.issues.length;j++)
         calculate(data.issues[j],result.times,result.existingCustomFields);
