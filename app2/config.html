@@ -3,18 +3,68 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
+var requestCounter={};
+var AP2 = { 
+  request: function(params){
+    if(params.url.includes('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog')) {
+      if(requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']) {
+        params.success( '{ "issues": [ ] }' );
+      } else {
+        requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']=true;
+        params.success( '{"issues": [{"id": 1,"c1":"","fields":{"created":"2023-01-06T22:27:47.163+0200"},"transitions": [{"name": "To Do"}],"changelog": {"histories": [{"created": "2023-05-06T22:27:47.163+0200","items": [{"field": "Status","fromString": "To Do","toString": "Done"}]}]}}]}' );
+      }
+    }///rest/api/3/field/search?type=custom&query=Duration
+    else if(params.url.includes('/rest/api/3/field/search?type=custom&query=Duration')) {
+      if(requestCounter['/rest/api/3/field/search?type=custom&query=Duration']) {
+        params.success( '{ "values": [ ] }' );
+      } else {
+        requestCounter['/rest/api/3/field/search?type=custom&query=Duration']=true;
+        params.success( '{"values": [{"id": 1,"name":"Duration in DOING"}]}' );
+      }
+    }
+    else if(params.url.includes('field/search')) {
+      if(requestCounter['field/search']) {
+        params.success( '{ "values": [ ] }' );
+      } else {
+        requestCounter['field/search']=true;
+        params.success( '{"values": [{"id": "c1","name":"Custom1"}]}' );
+      }
+    }///rest/api/3/field
+    else if(params.url.includes('/api/3/field')) {
+        params.success( '{"id":"c2","name":"C2"}' );
+    }///rest/api/3/screens
+    else if(params.url.includes('rest/api/3/screens')) {
+      if(requestCounter['rest/api/3/screens']) {
+        params.success( '{ "values": [ ] }' );
+      } else {
+        requestCounter['rest/api/3/screens']=true;
+        params.success( '{"values": [{"id": "s1","name":"screen1"}]}' );
+      }
+    }
+    else if(params.url.includes('/tabs')) {
+        params.success( '{"id":"t2","name":"tab 2"}' );
+    }
+    else if(params.url.includes('/rest/api/3/issue/')) {
+        params.success( '{"id":"t2","name":"tab 2"}' );
+    }
+  }
+};
+
 function main() {
   //1. GET ISSUES and CALCULATE
   getIssues(function(getIssuesResult) {   
     //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
     getMissingCustomFields(getIssuesResult,function(getIssuesResult, missingCustomFieldsResult) {
       //3. CREATE MISSING CUSTOM FIELDS   
-      createCustomFields(missingCustomFieldsResult, function(getIssuesResult, customFieldIds) {
+      createCustomFields(getIssuesResult, missingCustomFieldsResult, function(getIssuesResult) {
         //4. ADD CUSTOM FIELDS TO SCREENS
-        addCustomFieldsToScreenTabs(getIssuesResult, customFieldIds,function(){
+        addCustomFieldsToScreenTabs(getIssuesResult,function(){
             //5. UPDATE ISSUES
+            updateIssues(getIssuesResult, function(){
+              console.log('done');
+            });
         });
-      }
+      });
     });
     
   });
@@ -31,7 +81,31 @@ function main() {
 
 
 
-
+  function updateIssues(getIssuesResult, doneCallback) {
+    var inTimesKeys = Object.keys(getIssuesResult.times);
+    var urlsAndPostDatas = [];
+    for(var i=0;i<inTimesKeys.length;i++) {
+      var issueKey=inTimesKeys[i];
+      var postCustomfieldData = {};
+      postCustomfieldData['fields']={};
+      
+      var times = Object.keys(getIssuesResult.times[issueKey]);
+      for(var j=0;j<times.length;j++) {
+        var tmpStatus = times[j];
+        if(tmpStatus!=='currentList')
+          postCustomfieldData['fields'][getIssuesResult.existingCustomFields['Duration In '+tmpStatus]]=getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3);      }
+    
+      urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
+    }
+    bulk(urlsAndPostDatas, 'PUT',10, function(argument) {
+      //done
+      doneCallback();
+    }, function(argument, argument2) {
+      //response
+      
+    });
+    
+  }
 
 
   function getIssues(doneCallback) {
@@ -50,22 +124,24 @@ function main() {
     var allFields = {};
     var missing = [];
     doGetMultithread('/rest/api/3/field/search?type=custom&query=Duration%20In%20&maxResults=100','values', 3, 
-    function(data) {
-      for(var j=0;j<data.values.length;j++)
-        allFields[data.values[i].name]=data.values[i].id;
-    }
+      function(data) {
+        for(var j=0;j<data.values.length;j++)
+          allFields[data.values[j].name]=data.values[j].id;
+      }
     , function() {
       var missingCustomFieds = {};
       var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
       for(var i=0;i<inTimesKeys.length;i++) {
         if(!allFields[getIssuesResult.existingCustomFields[inTimesKeys[i]]])
           missing.push(inTimesKeys[i]);
+        else
+          getIssuesResult.existingCustomFields[inTimesKeys[i]]=allFields[getIssuesResult.existingCustomFields[inTimesKeys[i]]];
       }
       doneCallback(getIssuesResult,missing);
     });
   }
 
-  function createCustomFields(getIssuesResult, customFieldsArray,callback) {
+  function createCustomFields(getIssuesResult, customFieldsArray, callback) {
     var urlsAndPostDatas = [];
     for(var i=0;i<customFieldsArray.length;i++) {
       var tmpPostData = JSON.stringify({
@@ -77,21 +153,60 @@ function main() {
       urlsAndPostDatas.push({ url: '/rest/api/3/field', postData: tmpPostData});
     }
 
-    var customFieldIds = [];
-    doPostMultithread(urlsAndPostDatas, 'POST',10, function(argument) {
+
+    bulk(urlsAndPostDatas, 'POST',10, function(argument) {
       //done
-      callback(getIssuesResult,customFieldIds);
-    }, function(argument) {
+      callback(getIssuesResult);
+    }, function(argument, argument2) {
       //response
-      customFieldIds.push(argument.id);
+      getIssuesResult.existingCustomFields[customFieldsArray[argument2]]=argument.id;
     });
   }
 
-  function addCustomFieldsToScreenTabs(getIssuesResult, customFieldIds, callback) {
+  function addCustomFieldsToScreenTabs(getIssuesResult, callback) {
+    var screens = [];
+    doGetMultithread('/rest/api/3/screens?maxResults=100','values', 10, 
+      function(data) {
+        for(var i=0;i<data.values.length;i++)
+          screens.push(data.values[i].id);
+      }
+    , function() {
+      var tabs = [];
+      var urlsAndPostDatas = [];
+      for(var i=0;i<screens.length;i++)
+        urlsAndPostDatas.push({ url: '/rest/api/2/screens/'+screens[i]+'/tabs', postData: null});
+      
+      bulk(urlsAndPostDatas, 'GET',10, function(argument) {
+        
+        var tabsPostDatas = [];
+        
+        var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
+        var customFieldIds=[];
+        for(var i=0;i<inTimesKeys.length;i++) 
+          customFieldIds.push(getIssuesResult.existingCustomFields[inTimesKeys[i]]);
+        
+        for(var i=0;i<tabs.length;i++) {
+          for(var j=0;j<customFieldIds.length;j++) {
+            var postData = {};
+            postData['fieldId']=customFieldIds[j];
+            tabsPostDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: JSON.stringify(postData)});
+          }
+        }
+        bulk(tabsPostDatas, 'POST',10, function(argument) {
+          //done
+          callback();
+        }, function(argument) {
 
+        });
+        
+      }, function(argument,argument2) {
+        //response
+        tabs.push({"tab":argument.id, "screen":screens[argument2]});
+      });
+    });
   }
 
-  function doPostMultithread(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
+  function bulk(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
     run(urlsAndPostDatas, method,threads, doneCallback, responseCallback);
 
     function run(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
@@ -108,7 +223,7 @@ function main() {
             done.push(false);
         for(var i=0;i<threads;i++)
             nea1(i,i*itemsPerThread,i===threads-1 ? total : i*itemsPerThread+itemsPerThread,function(argg) { done[argg]=true; check1(done,doneCallback); },
-               method,urlsAndPostDatas, responseCallback);
+               urlsAndPostDatas,method, responseCallback);
     }
 
     function check1(done,callback) {
@@ -122,9 +237,9 @@ function main() {
        if(tmpUrl>=max){
            callback(ii);
        } else {
-         request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
+         AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
            console.log(tmpUrl);
-           responseCallback(JSON.parse(data));
+           responseCallback(JSON.parse(data),tmpUrl);
            nea1(ii, tmpUrl+1,max,callback, method,urlsAndPostDatas, responseCallback);
         }, error: function(xhr, statusText, errorThrown){  
            console.log("GT:retry " +tmpUrl );
@@ -136,12 +251,14 @@ function main() {
 
   }
 
-  function doGetMultithread(url, xpath, threads, responseCallback, doneCallback) {
+  function doGetMultithread(paramUrl, paramXpath, threads, responseCallback, doneCallback) {
     var sharedStart=0;
     var sharedDone=false;
     var sharedStarted=0;
     var sharedFinished=0;
-    //xpath,url
+    var xpath="";
+    var url="";
+    var doneCalled=false;
 
     run(threads,doneCallback);
 
@@ -150,6 +267,8 @@ function main() {
       sharedDone=false;
       sharedStarted=0;
       sharedFinished=0;
+      url=paramUrl;
+      xpath=paramXpath;
 
       for(var i=0;i<sharedStart;)
         nea(i++, function() { doneCallback(); } );
@@ -157,25 +276,28 @@ function main() {
 
     function nea(tmpUrl, doneCallback, retry) {
        if(sharedDone && sharedFinished===sharedStarted && !retry){
+          if(!doneCalled) {
+            doneCalled=true;
            doneCallback();
+         }
        } else {
          if(!sharedDone || retry) {
           sharedStarted++;
           AP.request({url: url+'&startAt'+(tmpUrl*100), type: 'GET', success: function(responseText){    
              let data = JSON.parse(responseText);
-             if(data[xPath].length===0) 
+             if(data[xpath].length===0) 
               sharedDone=true;
              sharedFinished++;
              console.log(tmpUrl);
              
              responseCallback(data);
              
-             nea(sharedStart++,callback);
+             nea(sharedStart++,doneCallback);
           }, error: function(xhr, statusText, errorThrown){  
             sharedFinished++;
              console.log("GT:retry " +tmpUrl );
              if(retryCount++<4000000)
-                 nea(tmpUrl,callback, true);
+                 nea(tmpUrl,doneCallback, true);
           } });	
         }
       }
@@ -508,47 +630,6 @@ function addFieldToDefaultScreen(fieldId,callback) {
       console.log("err: "+errorThrown);
     }
   });
-}
-
-var startAt=10;
-var retryCount=0;
-var retryAfterMiliseconds = 100000;
-function GT3() {
-  for(var i=0;i<startAt;i++)
-    GT4(i);
-}
-var started=0;
-var finished=0;
-function GT4(i,callback) {
-  started++;
-  var tmp = startAt;
-  if(i)
-    tmp = i;
-  var tmpUrl = '/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&startAt='+(tmp*100)+'&maxResults=100';
-  console.log(tmpUrl);
-  AP.request({url: tmpUrl, type: 'GET', success: function(responseText){
-    finished++;
-    //console.log("GT res: "+ responseText);
-    let data = JSON.parse(responseText);
-    for(var j=0;j<data.issues.length;j++)
-      calculate(data.issues[j]);
-    if(data.issues.length===0) {
-      //setTimeout(,3000);
-      callback();
-      return;
-    }
-    startAt++;
-    if(started-finished>10)
-      console.log("GT threads exceeded");
-    else
-      GT4(undefined, callback);
-  }, error: function(xhr, statusText, errorThrown){ 
-    finished++;
-   // console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); 
-    console.log("GT:retry");
-    if(retryCount++<4000000)
-      setTimeout(GT4(),retryAfterMiliseconds,startAt-1, callback);
-  }});   
 }
 
 function printStatuses() {
