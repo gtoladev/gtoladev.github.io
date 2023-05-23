@@ -215,6 +215,7 @@ function main() {
 
   function bulk(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
     var retryCount=0;
+    var retryCounter=0;
     run(urlsAndPostDatas, method,threads, doneCallback, responseCallback);
 
     function run(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
@@ -256,9 +257,9 @@ function main() {
             if(retryAfter)
               retryAfter=parseInt(retryAfter);
             else
-              retryAfter=60;
+              retryAfter=110;
            console.log("GT:retry " +tmpUrl );
-           if(retryCount++<4)
+           if(retryCounter++<retryCount)
                setTimeout(nea1, retryAfter*1000 ,ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
         } }); 
       }
