@@ -3,20 +3,6 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
-  function testUpdate() {
-    var data = [{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})},{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})}];
-    bulk(data, 'PUT',1, function(argument) {
-      //done
-      doneCallback();
-    }, function(argument, argument2) {
-      //response
-      
-    });
-    
-  }
-
-
-
 
 var requestCounter={};
 var AP2 = { 
@@ -66,6 +52,22 @@ var AP2 = {
 };
 
 function main() {
+  testUpdate();
+
+  function testUpdate() {
+    var data = [{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})},{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})}];
+    bulk(data, 'PUT',1, function(argument) {
+      //done
+      doneCallback();
+    }, function(argument, argument2) {
+      //response
+      
+    });
+    
+  }
+  
+  return;
+  
   //1. GET ISSUES and CALCULATE
   getIssues(function(getIssuesResult) {   
     //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
@@ -720,7 +722,7 @@ function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="testUpdate()">GoGOGOGOGOOGOG</button>
+<button onclick="main()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
