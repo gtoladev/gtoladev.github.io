@@ -3,6 +3,21 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
+  function testUpdate() {
+    var data = [{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})},{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})}];
+    bulk(data, 'PUT',1, function(argument) {
+      //done
+      doneCallback();
+    }, function(argument, argument2) {
+      //response
+      
+    });
+    
+  }
+
+
+
+
 var requestCounter={};
 var AP2 = { 
   request: function(params){
@@ -705,7 +720,7 @@ function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) {
 <body>
 <h1>CONFIG<h1>
 <input type="text" id="jwt"></input>
-<button onclick="main()">GoGOGOGOGOOGOG</button>
+<button onclick="testUpdate()">GoGOGOGOGOOGOG</button>
 <p id="gtolaResult"></p>
 </body>
 </html>
