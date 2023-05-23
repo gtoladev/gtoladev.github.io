@@ -52,7 +52,7 @@ var AP2 = {
 };
 
 function main() {
-  testUpdate();
+  //testUpdate();
 
   function testUpdate() {
     var data = [{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})},{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})}];
@@ -66,7 +66,7 @@ function main() {
     
   }
   
-  return;
+  //return;
   
   //1. GET ISSUES and CALCULATE
   getIssues(function(getIssuesResult) {   
@@ -104,7 +104,7 @@ function main() {
     
       urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
     }
-    bulk(urlsAndPostDatas, 'PUT',1, function(argument) {
+    bulk(urlsAndPostDatas, 'PUT',10, function(argument) {
       //done
       doneCallback();
     }, function(argument, argument2) {
@@ -249,7 +249,7 @@ function main() {
           console.log('here');
          AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
            console.log(urlsAndPostDatas[tmpUrl].url);
-           responseCallback(JSON.parse(data),tmpUrl);
+           responseCallback(data ? JSON.parse(data) : null,tmpUrl);
            nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
         }, error: function(xhr, statusText, errorThrown){  
            console.log("GT:retry " +tmpUrl );
