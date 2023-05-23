@@ -225,7 +225,7 @@ function main() {
             itemsPerThread=1;
             threads=total;
         }
-
+        retryCount=10*threads;
         var done = [];
         for(var i=0;i<threads;i++)
             done.push(false);
@@ -280,7 +280,7 @@ function main() {
       sharedFinished=0;
       url=paramUrl;
       xpath=paramXpath;
-
+      retryCount=10*threads;
       for(var i=0;i<sharedStart;)
         nea(i++, function() { doneCallback(); } );
     }
