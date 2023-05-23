@@ -115,8 +115,8 @@ function main() {
 
 
   function getIssues(doneCallback) {
-    var result = { times: {}, existingCustomFields: {}};//&jql=project=PROJ2
-    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100&jql=project=PROJ2','issues', 10, 
+    var result = { times: {}, existingCustomFields: {}};//&jql=project=PROJ2    updated%20%3E%3D%20-1d%20AND%20project%20in%20%28BUG%2C%20BUG2%2C%20ITIS%2C%20P3%2C%20PROJ2%2C%20SUP%29
+    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100&jql=updated%20%3E%3D%20-1d%20AND%20project%20in%20%28BUG%2C%20BUG2%2C%20ITIS%2C%20P3%2C%20PROJ2%2C%20SUP%29','issues', 10, 
     function(data) {
       for(var j=0;j<data.issues.length;j++)
         calculate(data.issues[j],result.times,result.existingCustomFields);
