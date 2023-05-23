@@ -252,9 +252,14 @@ function main() {
            responseCallback(data ? JSON.parse(data) : null,tmpUrl);
            nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
         }, error: function(xhr, statusText, errorThrown){  
+            var retryAfter = xhr.getResponseHeader('retry-after');
+            if(retryAfter)
+              retryAfter=parseInt(retryAfter);
+            else
+              retryAfter=60;
            console.log("GT:retry " +tmpUrl );
            if(retryCount++<4)
-               setTimeout(nea1, 110*1000 ,ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
+               setTimeout(nea1, retryAfter*1000 ,ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
         } }); 
       }
     }
