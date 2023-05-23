@@ -3,7 +3,6 @@
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <script>
-
 var requestCounter={};
 var AP2 = { 
   request: function(params){
@@ -215,6 +214,7 @@ function main() {
   }
 
   function bulk(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
+    var retryCount=0;
     run(urlsAndPostDatas, method,threads, doneCallback, responseCallback);
 
     function run(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
@@ -253,8 +253,8 @@ function main() {
            nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
         }, error: function(xhr, statusText, errorThrown){  
            console.log("GT:retry " +tmpUrl );
-           if(retryCount++<4000000)
-               nea1(ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
+           if(retryCount++<4)
+               setTimeout(nea1, 110*1000 ,ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
         } }); 
       }
     }
@@ -269,6 +269,7 @@ function main() {
     var xpath="";
     var url="";
     var doneCalled=false;
+    var retryCount=0;
 
     run(threads,doneCallback);
 
@@ -306,416 +307,77 @@ function main() {
           }, error: function(xhr, statusText, errorThrown){  
             sharedFinished++;
              console.log("GT:retry " +tmpUrl );
-             if(retryCount++<4000000)
+             if(retryCount++<4)
                  nea(tmpUrl,doneCallback, true);
           } });	
         }
       }
     }
   }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function test1(){
- // paginate('/rest/api/2/screenscheme', 0, [], function(data){
   
-    createCustomField("GT2", function(field){
-  
+  function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) { 
+    let metric = 1000 * 60;
     
+    let tmpDate = new Date(DATA.fields.created);
+    let tmpCardId = DATA.key;
+    let tmpList = DATA.transitions[0].name;
     
-  
-  
-    var data = [ { 'screens': { 'default': 10002} }, { 'screens': { 'default': 10003} } ]
-    for(var i=0;i<data.length;i++) {
-      var screenId = data[i].screens.default;
-      AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs', type: 'GET', headers: { Accept: 'application/json' },
-        success: function(tabsText){
-          var tabsData = JSON.parse(tabsText);
-          console.log("success:"+tabsText);
-          
-          var customFieldId=field.id;//'customfield_10071';
-          var postData = {};
-          postData['fieldId']=customFieldId;
-          
-          var issueKey='PROJ2-2';
-          var postCustomfieldData = {};
-          postCustomfieldData['fields']={};
-          postCustomfieldData['fields'][customFieldId]=1.234;
-          
-          for(var j=0;j<tabsData.length; j++) {
-            AP.request({url: '/rest/api/2/screens/'+screenId+'/tabs/'+tabsData[j].id+'/fields', type: 'POST', contentType: 'application/json', headers: { Accept: 'application/json' },data: JSON.stringify(postData),
-              success: function(addTotabText){
-                var addTotabsData = JSON.parse(addTotabText);
-                console.log("success:"+addTotabText);
-               
-                //addFieldToDefaultScreen(customFieldId,function() {              })
-                
-                var issueKey='10000';
-                var postCustomfieldData = {};
-                postCustomfieldData['fields']={};
-                postCustomfieldData['fields'][customFieldId]=1.234;
-                
-                AP.request({
-                  url: '/rest/api/3/issue/'+issueKey,
-                  type: 'PUT',
-                  contentType: 'application/json',
-                  headers: { Accept: 'application/json' },
-                  data: JSON.stringify(postCustomfieldData),
-                  success: function(responseText){
-                    console.log("success:"+responseText);
-                  },
-                  error: function(xhr, statusText, errorThrown){
-                    console.log("err: "+errorThrown);
-                  }
-                });
-                
-                
-              },
-              error: function(xhr, statusText, errorThrown){
-                console.log("err: "+errorThrown);
-                
-                AP.request({
-                  url: '/rest/api/3/issue/'+issueKey,
-                  type: 'PUT',
-                  contentType: 'application/json',
-                  headers: { Accept: 'application/json' },
-                  data: JSON.stringify(postCustomfieldData),
-                  success: function(responseText){
-                    console.log("success:"+responseText);
-                  },
-                  error: function(xhr, statusText, errorThrown){
-                    console.log("err: "+errorThrown);
-                  }
-                });
-                
-                
-              }
-            });
-          }
-          
-        },
-        error: function(xhr, statusText, errorThrown){
-          console.log("err: "+errorThrown);
+    //debugger;
+    
+    let startFrom = DATA.changelog.histories.length-1;
+    let moved = false;
+    let prevStatusAfterMove=null;
+    for(let i=0;i<DATA.changelog.histories.length && !moved;i++) {
+      for(let j=0;j<DATA.changelog.histories[i].items.length;j++) {
+        if(DATA.changelog.histories[i].items[j].field==="status") {
+          prevStatusAfterMove = DATA.changelog.histories[i].items[j].fromString;
+        } else if(DATA.changelog.histories[i].items[j].field==="project") {
+          tmpList=prevStatusAfterMove ? prevStatusAfterMove : DATA.fields.status.name;
+          tmpDate= new Date(DATA.changelog.histories[i].created);
+          startFrom = i;
+          moved=true;
+          break;
         }
-      });
+      }
+    }
     
+    TIMES[tmpCardId] = {};
+    TIMES[tmpCardId]['currentList']=tmpList;
+    TIMES[tmpCardId][tmpList] = {};
+    TIMES[tmpCardId][tmpList]['from']=tmpDate;
+    TIMES[tmpCardId][tmpList]['time']=0;
+    
+    CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpList]="";
+    
+    for(let i=startFrom; i>=0; i--) {  
+      for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
+        if(DATA.changelog.histories[i].items[j].field==="status") {
+          tmpDate = new Date(DATA.changelog.histories[i].created);
+          let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
+          let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
+          
+          CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListBefore]="";
+          CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListAfter]="";
+          
+          TIMES[tmpCardId]['currentList']=tmpListAfter;     
+          if(TIMES[tmpCardId][tmpListBefore])
+            TIMES[tmpCardId][tmpListBefore]['time'] += (tmpDate-TIMES[tmpCardId][tmpListBefore]['from'])/metric;
+          if(!TIMES[tmpCardId][tmpListAfter])
+            TIMES[tmpCardId][tmpListAfter] = { time: 0};
+          TIMES[tmpCardId][tmpListAfter]['from'] = tmpDate;
+        }
     }
-  
-  
-  });
-  //});
-
-
-
-  return;
-
-  AP.request({url: '/rest/api/2/screens', type: 'GET', headers: { Accept: 'application/json' },
-    success: function(screensText){
-      var screensData = JSON.parse(screensText);
-      console.log("success:"+screensText);
-      
-
-      
-    },
-    error: function(xhr, statusText, errorThrown){
-      console.log("err: "+errorThrown);
-    }
-  });
-}
-
-function addFieldToTab(fieldId,callback) {
-  AP.request({
-    url: '/rest/api/2/screens/{screenId}/tabs/{tabId}/fields',
-    type: 'POST',
-    headers: { Accept: 'application/json' },
-    success: function(responseText){
-      callback(JSON.parse(responseText));
-      console.log("success:"+responseText);
-    },
-    error: function(xhr, statusText, errorThrown){
-      callback();
-      console.log("err: "+errorThrown);
-    }
-  });
-}
-
-function paginate(path, startAt, result, onDoneCallback) {
-  AP.request({
-    url: path+(path.includes('?') ? '&' : '?')  +'startAt='+startAt+'&maxResults=200',
-    type: 'GET',
-    contentType: 'application/json',
-    headers: { Accept: 'application/json' },
-    success: function(responseText){
-      var items = JSON.parse(responseText).values;
-      if(items.length>0) {
-        result = result.concat(items);
-        paginate(path, startAt+items.length, result, onDoneCallback);
-      } else {
-        onDoneCallback(result);
-      }
-      console.log("success:"+responseText);
-    },
-    error: function(xhr, statusText, errorThrown){
-      console.log("err: "+errorThrown);
-    }
-  });
-}
-
-
-function statuses() {
-  // paginate('/rest/api/3/screens?queryString=GTOLA',0,[],function(screensData){
-  //   if(screensData.values.length===0) {
-  //     createScreen(function(createScreenData){
-  //       var screenId = createScreenData.id;
-
-        paginate('/rest/api/3/field/search?type=custom&query=Duration%20In%20',0,[],function(data){
-            var customFields = {};
-            if(data.values.length>0) {
-              for(var i=0;i<data.values.length; i++) {
-                customFields[data.values[i].name]=data.values[i].id;
-                addFieldToDefaultScreen(data.values[i].id);
-              }
-            } else {
-              paginate('/rest/api/3/statuses/search?projectId=10000',0,[],function(data){
-                for(var i=0;i<data.length; i++)
-                  createCustomField('Duration In '+data[i].name, function(arg1) {
-                    customFields[arg1.name]=arg1.id;
-                    addFieldToDefaultScreen(arg1.id);
-                  });
-              });
-            }
-            
-          for(var i=0;i<startAt;i++)
-            GT4(i, function(){
-              var possibleKeys = {};
-              Object.keys(TIMES).forEach(function (key) {
-                Object.keys(TIMES[key]).forEach(function (key2) {
-                  if(!key2!=='currentList')
-                    possibleKeys[key2]=1;
-                });
-              });
-              Object.keys(possibleKeys).forEach(function (key) {
-                if(!customFields['Duration In '+key])
-                  createCustomField('Duration In '+key, function(arg1) {
-                    customFields[arg1.name]=arg1.id;
-                  });
-              });
-
-              var first=true;
-              Object.keys(TIMES).forEach(function (key) {
-                if(!first)
-                  return;
-                first=false;
-                var postData = {};
-                postData["fields"]={};
-                Object.keys(TIMES[key]).forEach(function (key2) {
-                  if(key2!=='currentList') {
-                    postData["fields"][customFields['Duration In '+key2]]=TIMES[key][key2].time.toFixed(2);
-                    addFieldToDefaultScreen(customFields['Duration In '+key2],function() {
-
-                      AP.request({
-                        url: '/rest/api/3/issue/'+key,
-                        type: 'PUT',
-                        contentType: 'application/json',
-                        headers: { Accept: 'application/json' },
-                        data: JSON.stringify(postData),
-                        success: function(responseText){
-                          console.log("success:"+responseText);
-                        },
-                        error: function(xhr, statusText, errorThrown){
-                          console.log("err: "+errorThrown);
-                        }
-                      });
-
-                    })
-                  }
-                });
-                
-
-
-
-              });
-         
-              
-
-            });
-            
-            
-            
-          });
-
-
-  //     });
-  //   }
-  // });
-}
-
-function GT(startAt) {
-  if(!startAt) {
-    startAt = { i:900 };
-    for(var i =0;i<10*100; i++)
-      AP.request({url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt='+(i*100)+'&maxResults=100', type: 'GET', success: function(responseText){ console.log("GT res: "+ responseText); let data = JSON.parse(responseText); GT(startAt.i=startAt.i+1); }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});
-  } else {
-    AP.request({url: '/rest/api/3/search?fields=key,project,status&expand=transitions,changelog&startAt='+(startAt.i*100)+'&maxResults=100', type: 'GET', success: function(responseText){ console.log("GT res: "+ responseText); let data = JSON.parse(responseText); GT(startAt.i=startAt.i+1); }, error: function(xhr, statusText, errorThrown){ console.log("GT: Error while getting issue details: "+JSON.stringify(arguments)); }});  
-  }
-}
-
-function createCustomField(statusName, callback) {
-  AP.request({
-    url: '/rest/api/3/field',
-    type: 'POST',
-    contentType: 'application/json',
-    headers: { Accept: 'application/json' },
-    data: JSON.stringify({
-      "description": statusName +' Status',
-      "name": statusName,
-      "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:numberrange",
-      "type": "com.atlassian.jira.plugin.system.customfieldtypes:float"
-    }),
-    success: function(responseText){
-      callback(JSON.parse(responseText));
-      console.log("success:"+responseText);
-    },
-    error: function(xhr, statusText, errorThrown){
-      console.log("err: "+errorThrown);
-    }
-  });
-}
-
-function createScreen(callback) {
-  AP.request({
-    url: '/rest/api/3/screens',
-    type: 'POST',
-    contentType: 'application/json',
-    headers: { Accept: 'application/json' },
-    data: JSON.stringify(      {
-        "description": "GTOLA",
-        "name": "GTOLA"
-      }),
-    success: function(responseText){
-      callback(JSON.parse(responseText));
-      console.log("success:"+responseText);
-    },
-    error: function(xhr, statusText, errorThrown){
-      console.log("err: "+errorThrown);
-    }
-  });
-}
-
-function addFieldToDefaultScreen(fieldId,callback) {
-  AP.request({
-    url: '/rest/api/3/screens/addToDefault/'+fieldId,
-    type: 'POST',
-    headers: { Accept: 'application/json' },
-    success: function(responseText){
-      callback(JSON.parse(responseText));
-      console.log("success:"+responseText);
-    },
-    error: function(xhr, statusText, errorThrown){
-      callback();
-      console.log("err: "+errorThrown);
-    }
-  });
-}
-
-function printStatuses() {
-  var possibleKeys = {};
-  Object.keys(TIMES).forEach(function (key) {
-   possibleKeys[key]=1;
-  });
-  var output = "";
-  Object.keys(possibleKeys).forEach(function (key) {
-   output = key+",";
-  });
-  alert(output);
-}
-
-
-function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) { 
-  let metric = 1000 * 60;
-  
-  let tmpDate = new Date(DATA.fields.created);
-  let tmpCardId = DATA.key;
-  let tmpList = DATA.transitions[0].name;
-  
-  //debugger;
-  
-  let startFrom = DATA.changelog.histories.length-1;
-  let moved = false;
-  let prevStatusAfterMove=null;
-  for(let i=0;i<DATA.changelog.histories.length && !moved;i++) {
-    for(let j=0;j<DATA.changelog.histories[i].items.length;j++) {
-      if(DATA.changelog.histories[i].items[j].field==="status") {
-        prevStatusAfterMove = DATA.changelog.histories[i].items[j].fromString;
-      } else if(DATA.changelog.histories[i].items[j].field==="project") {
-        tmpList=prevStatusAfterMove ? prevStatusAfterMove : DATA.fields.status.name;
-        tmpDate= new Date(DATA.changelog.histories[i].created);
-        startFrom = i;
-        moved=true;
-        break;
-      }
+    
+    var timesCounter=0;
+    var keys = Object.keys(TIMES);
+    for(var i=0;i<keys.length;i++) {
+      var key = keys[i];
+      let now = new Date();
+      TIMES[key][ TIMES[key]['currentList'] ]['time']+=(now-TIMES[key][ TIMES[key]['currentList'] ]['from'])/metric;
+      timesCounter++;
     }
   }
   
-  TIMES[tmpCardId] = {};
-  TIMES[tmpCardId]['currentList']=tmpList;
-  TIMES[tmpCardId][tmpList] = {};
-  TIMES[tmpCardId][tmpList]['from']=tmpDate;
-  TIMES[tmpCardId][tmpList]['time']=0;
-  
-  CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpList]="";
-  
-  for(let i=startFrom; i>=0; i--) {  
-    for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
-      if(DATA.changelog.histories[i].items[j].field==="status") {
-        tmpDate = new Date(DATA.changelog.histories[i].created);
-        let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
-        let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
-        
-        CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListBefore]="";
-        CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListAfter]="";
-        
-        TIMES[tmpCardId]['currentList']=tmpListAfter;     
-        if(TIMES[tmpCardId][tmpListBefore])
-          TIMES[tmpCardId][tmpListBefore]['time'] += (tmpDate-TIMES[tmpCardId][tmpListBefore]['from'])/metric;
-        if(!TIMES[tmpCardId][tmpListAfter])
-          TIMES[tmpCardId][tmpListAfter] = { time: 0};
-        TIMES[tmpCardId][tmpListAfter]['from'] = tmpDate;
-      }
-  }
-  
-  var timesCounter=0;
-  var keys = Object.keys(TIMES);
-  for(var i=0;i<keys.length;i++) {
-    var key = keys[i];
-    let now = new Date();
-    TIMES[key][ TIMES[key]['currentList'] ]['time']+=(now-TIMES[key][ TIMES[key]['currentList'] ]['from'])/metric;
-    timesCounter++;
-  }
 }
 </script>
 </head>
