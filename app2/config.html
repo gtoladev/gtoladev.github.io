@@ -87,7 +87,7 @@ function main() {
     
       urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
     }
-    bulk(urlsAndPostDatas, 'PUT',10, function(argument) {
+    bulk(urlsAndPostDatas, 'PUT',1, function(argument) {
       //done
       doneCallback();
     }, function(argument, argument2) {
