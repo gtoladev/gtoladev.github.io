@@ -159,6 +159,9 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
   }
 
   function createCustomFields(getIssuesResult, customFieldsArray, callback) {
+    if(customFieldsArray.length===0)
+      callback(getIssuesResult);
+  
     var urlsAndPostDatas = [];
     for(var i=0;i<customFieldsArray.length;i++) {
       var tmpPostData = JSON.stringify({
