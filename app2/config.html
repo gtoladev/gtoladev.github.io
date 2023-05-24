@@ -77,7 +77,10 @@ function main() {
         addCustomFieldsToScreenTabs(getIssuesResult,function(){
             //5. UPDATE ISSUES
             updateIssues(getIssuesResult, function(){
-              console.log('done');
+             //6. REMOVE CUSTOM FIELDS FROM SCREENS
+              removeCustomFieldsfromTabs(getIssuesResult, function(){
+                console.log('done');
+              });
             });
         });
       });
@@ -85,7 +88,14 @@ function main() {
     
   });
 
-  //6. REMOVE CUSTOM FIELDS FROM SCREENS
+function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
+  bulk(getIssuesResult.tabsDeleteDatas, 'DELETE',10, function(argument) {
+    //done
+    doneCallback();
+  }, function(argument, argument2) {
+    //response
+  });
+}
 
   function updateIssues(getIssuesResult, doneCallback) {
     var inTimesKeys = Object.keys(getIssuesResult.times);
@@ -183,27 +193,44 @@ function main() {
         urlsAndPostDatas.push({ url: '/rest/api/2/screens/'+screens[i]+'/tabs', postData: null});
       
       bulk(urlsAndPostDatas, 'GET',10, function(argument) {
-        
         var tabsPostDatas = [];
-        
+        var tabsGetDatas = [];
         var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
         var customFieldIds=[];
         for(var i=0;i<inTimesKeys.length;i++) 
           customFieldIds.push(getIssuesResult.existingCustomFields[inTimesKeys[i]]);
         
-        for(var i=0;i<tabs.length;i++) {
-          for(var j=0;j<customFieldIds.length;j++) {
-            var postData = {};
-            postData['fieldId']=customFieldIds[j];
-            tabsPostDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: JSON.stringify(postData)});
+        for(var i=0;i<tabs.length;i++)
+          tabsGetDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: null});
+ 
+        bulk(tabsGetDatas, 'GET',10, function(argument) {
+        
+          getIssuesResult['tabsDeleteDatas']=[];
+          for(var i=0;i<tabs.length;i++) {
+            for(var j=0;j<customFieldIds.length;j++) {
+              var postData = {};
+              postData['fieldId']=customFieldIds[j];
+              tabsPostDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: JSON.stringify(postData)});
+              getIssuesResult.tabsDeleteDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields/'+customFieldIds[j], postData: null});
+            }
           }
-        }
-        bulk(tabsPostDatas, 'POST',10, function(argument) {
-          //done
-          callback();
-        }, function(argument) {
+        
+          bulk(tabsPostDatas, 'POST',10, function(argument) {
+            //done
+            callback();
+          }, function(argument) {
 
+          });
+        }, function(argument) {
+          for(var i=0;i<customFieldIds.length; i++) {
+              if(customFieldIds[i]===argument.id) {
+                customFieldIds.splice(i, 1);
+                break;
+              }
+          }
         });
+        
+
         
       }, function(argument,argument2) {
         //response
@@ -276,6 +303,7 @@ function main() {
     var url="";
     var doneCalled=false;
     var retryCount=0;
+    var retryCounter=0;
 
     run(threads,doneCallback);
 
@@ -310,12 +338,13 @@ function main() {
              responseCallback(data);
              
              nea(sharedStart++,doneCallback);
-          }, error: function(xhr, statusText, errorThrown){  
-            sharedFinished++;
-             console.log("GT:retry " +tmpUrl );
-             if(retryCount++<4)
-                 nea(tmpUrl,doneCallback, true);
-          } });	
+            }, error: function(xhr, statusText, errorThrown){  
+              sharedFinished++;
+               console.log("GT:retry " +tmpUrl );
+               if(retryCounter++<retryCount)
+                 setTimeout(nea, 110*1000 ,tmpUrl,doneCallback, true);
+            } 
+          });	
         }
       }
     }
