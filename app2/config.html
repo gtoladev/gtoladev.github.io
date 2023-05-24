@@ -13,12 +13,12 @@ var AP2 = {
         requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']=true;
         params.success( '{"issues": [{"id": 1,"c1":"","fields":{"created":"2023-01-06T22:27:47.163+0200"},"transitions": [{"name": "To Do"}],"changelog": {"histories": [{"created": "2023-05-06T22:27:47.163+0200","items": [{"field": "Status","fromString": "To Do","toString": "Done"}]}]}}]}' );
       }
-    }///rest/api/3/field/search?type=custom&query=Duration
-    else if(params.url.includes('/rest/api/3/field/search?type=custom&query=Duration')) {
-      if(requestCounter['/rest/api/3/field/search?type=custom&query=Duration']) {
+    }///rest/api/3/field/search?type=custom&query=
+    else if(params.url.includes('/rest/api/3/field/search?type=custom&query=')) {
+      if(requestCounter['/rest/api/3/field/search?type=custom&query=']) {
         params.success( '{ "values": [ ] }' );
       } else {
-        requestCounter['/rest/api/3/field/search?type=custom&query=Duration']=true;
+        requestCounter['/rest/api/3/field/search?type=custom&query=']=true;
         params.success( '{"values": [{"id": 1,"name":"Duration in DOING"}]}' );
       }
     }
@@ -51,6 +51,7 @@ var AP2 = {
 };
 
 function main() {
+  const CUSTOMFIELD_PREFIX = 'GTOLA ';//'Duration In '
   //testUpdate();
 
   function testUpdate() {
@@ -109,7 +110,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
       for(var j=0;j<times.length;j++) {
         var tmpStatus = times[j];
         if(tmpStatus!=='currentList')
-          postCustomfieldData['fields'][getIssuesResult.existingCustomFields['Duration In '+tmpStatus]]=parseFloat(getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3));      }
+          postCustomfieldData['fields'][getIssuesResult.existingCustomFields[CUSTOMFIELD_PREFIX+tmpStatus]]=parseFloat(getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3));      }
     
       urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
     }
@@ -126,7 +127,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
 
   function getIssues(doneCallback) {
     var result = { times: {}, existingCustomFields: {}};//&jql=project=PROJ2    updated%20%3E%3D%20-1d%20AND%20project%20in%20%28BUG%2C%20BUG2%2C%20ITIS%2C%20P3%2C%20PROJ2%2C%20SUP%29    updated%20%3E%3D%20-1.4h%20AND%20project%20%3D%20PROJ%20order%20by%20updated%20DESC
-    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100','issues', 10, 
+    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100&jql=project=PROJ2','issues', 10, 
     function(data) {
       for(var j=0;j<data.issues.length;j++)
         calculate(data.issues[j],result.times,result.existingCustomFields);
@@ -139,7 +140,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
   function getMissingCustomFields(getIssuesResult, doneCallback) {
     var allFields = {};
     var missing = [];
-    doGetMultithread('/rest/api/3/field/search?type=custom&query=Duration%20In%20&maxResults=100','values', 3, 
+    doGetMultithread('/rest/api/3/field/search?type=custom&query='+encodeURIComponent(CUSTOMFIELD_PREFIX)+'&maxResults=100','values', 3, 
       function(data) {
         for(var j=0;j<data.values.length;j++)
           allFields[data.values[j].name]=data.values[j].id;
@@ -382,7 +383,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
     TIMES[tmpCardId][tmpList]['from']=tmpDate;
     TIMES[tmpCardId][tmpList]['time']=0;
     
-    CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpList]="";
+    CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpList]="";
     
     for(let i=startFrom; i>=0; i--) {  
       for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
@@ -391,8 +392,8 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
           let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
           let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
           
-          CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListBefore]="";
-          CUSTOM_FIELDS_IN_TIMES['Duration In ' + tmpListAfter]="";
+          CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpListBefore]="";
+          CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpListAfter]="";
           
           TIMES[tmpCardId]['currentList']=tmpListAfter;     
           if(TIMES[tmpCardId][tmpListBefore])
