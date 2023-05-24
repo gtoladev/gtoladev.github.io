@@ -149,10 +149,10 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
       var missingCustomFieds = {};
       var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
       for(var i=0;i<inTimesKeys.length;i++) {
-        if(!allFields[getIssuesResult.existingCustomFields[inTimesKeys[i]]])
+        if(!allFields[inTimesKeys[i]])
           missing.push(inTimesKeys[i]);
         else
-          getIssuesResult.existingCustomFields[inTimesKeys[i]]=allFields[getIssuesResult.existingCustomFields[inTimesKeys[i]]];
+          getIssuesResult.existingCustomFields[inTimesKeys[i]]=allFields[inTimesKeys[i]];
       }
       doneCallback(getIssuesResult,missing);
     });
