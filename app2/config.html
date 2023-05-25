@@ -52,6 +52,14 @@ var AP2 = {
 
 function main() {
   const CUSTOMFIELD_PREFIX = 'GTOLA ';//'Duration In '
+  var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,PROGRESS:0,NUMBER_OF_JOBS:0 };
+  function updateStatus() {
+    if(STATUS_INFO.PERCENTAGE>=1) {
+      STATUS_INFO.PERCENTAGE=1;
+      STATUS_INFO.STATUS='DONE';
+    }
+    document.getElementById("gtolaStatus").innerHTML = Math.round(parseFloat(STATUS_INFO.PERCENTAGE.toFixed(2))*100)+"% "+STATUS_INFO.STATUS;
+  }
   //testUpdate();
 
   function testUpdate() {
@@ -68,18 +76,38 @@ function main() {
   
   //return;
   
+  NUMBER_OF_JOBS=6;
+  STATUS_INFO.STATUS='getIssues';
+  updateStatus();
   //1. GET ISSUES and CALCULATE
   getIssues(function(getIssuesResult) {   
+    STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+    STATUS_INFO.STATUS='getMissingCustomFields';
+    updateStatus();
     //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
     getMissingCustomFields(getIssuesResult,function(getIssuesResult, missingCustomFieldsResult) {
+      STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+      STATUS_INFO.STATUS='createCustomFields';
+      updateStatus();
       //3. CREATE MISSING CUSTOM FIELDS   
       createCustomFields(getIssuesResult, missingCustomFieldsResult, function(getIssuesResult) {
+        STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+        STATUS_INFO.STATUS='addCustomFieldsToScreenTabs';
+        updateStatus();
         //4. ADD CUSTOM FIELDS TO SCREENS
         addCustomFieldsToScreenTabs(getIssuesResult,function(){
+            STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+            STATUS_INFO.STATUS='updateIssues';
+            updateStatus();
             //5. UPDATE ISSUES
             updateIssues(getIssuesResult, function(){
              //6. REMOVE CUSTOM FIELDS FROM SCREENS
+              STATUS_INFO.STATUS='removeCustomFieldsfromTabs';
+              updateStatus();
               removeCustomFieldsfromTabs(getIssuesResult, function(){
+                STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+                STATUS_INFO.STATUS='done';
+                updateStatus();
                 console.log('done');
               });
             });
@@ -119,7 +147,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
       doneCallback();
     }, function(argument, argument2) {
       //response
-      
+      STATUS_INFO.PERCENTAGE += ++STATUS_INFO.PROGRESS / STATUS_INFO.TOTAL / STATUS_INFO.NUMBER_OF_JOBS; 
     });
     
   }
@@ -422,8 +450,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
 </head>
 <body>
 <h1>CONFIG<h1>
-<input type="text" id="jwt"></input>
 <button onclick="main()">GoGOGOGOGOOGOG</button>
-<p id="gtolaResult"></p>
+<p id="gtolaStatus"></p>
 </body>
 </html>
