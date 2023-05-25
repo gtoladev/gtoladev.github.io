@@ -257,11 +257,17 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
 
           });
         }, function(argument) {
+          var found=false;
           for(var i=0;i<customFieldIds.length; i++) {
+            for(var j=0;j<argument.length;j++) {
               if(customFieldIds[i]===argument.id) {
                 customFieldIds.splice(i, 1);
+                found=true;
                 break;
               }
+              if(found)
+                break;
+            }
           }
         });
         
