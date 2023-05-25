@@ -239,7 +239,9 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
           tabsGetDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: null});
  
         bulk(tabsGetDatas, 'GET',10, function(argument) {
-        
+          if(customFieldIds.length===0)
+            callback();
+            
           getIssuesResult['tabsDeleteDatas']=[];
           for(var i=0;i<tabs.length;i++) {
             for(var j=0;j<customFieldIds.length;j++) {
