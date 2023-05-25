@@ -81,7 +81,7 @@ function main() {
   updateStatus();
   //1. GET ISSUES and CALCULATE
   getIssues(function(getIssuesResult) {   
-    STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+    //STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
     STATUS_INFO.STATUS='getMissingCustomFields';
     updateStatus();
     //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
@@ -161,6 +161,10 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
     function(data) {
       for(var j=0;j<data.issues.length;j++)
         calculate(data.issues[j],result.times,result.existingCustomFields);
+        
+      if(data.issues.length>0)
+        STATUS_INFO.PERCENTAGE += 1 / (data.total/data.issues.length) / STATUS_INFO.NUMBER_OF_JOBS; 
+      updateStatus();
     }
     , function() {
       doneCallback(result);
