@@ -119,6 +119,8 @@ function main() {
   });
 
 function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
+  if(getIssuesResult.tabsDeleteDatas.length===0)
+    doneCallback();
   bulk(getIssuesResult.tabsDeleteDatas, 'DELETE',10, function(argument) {
     //done
     doneCallback();
