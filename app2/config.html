@@ -52,7 +52,7 @@ var AP2 = {
 
 function main() {
   const CUSTOMFIELD_PREFIX = 'GTOLA ';//'Duration In '
-  var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,PROGRESS:0,NUMBER_OF_JOBS:0 };
+  var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,NUMBER_OF_JOBS:0 };
   function updateStatus() {
     if(STATUS_INFO.PERCENTAGE>=1) {
       STATUS_INFO.PERCENTAGE=1;
@@ -101,7 +101,6 @@ function main() {
             updateStatus();
             //5. UPDATE ISSUES
             STATUS_INFO.TOTAL=Object.keys(getIssuesResult.times).length;
-            STATUS_INFO.PROGRESS=0;
             updateIssues(getIssuesResult, function(){
              //6. REMOVE CUSTOM FIELDS FROM SCREENS
               STATUS_INFO.STATUS='removeCustomFieldsfromTabs';
@@ -149,7 +148,7 @@ function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
       doneCallback();
     }, function(argument, argument2) {
       //response
-      STATUS_INFO.PERCENTAGE += ++STATUS_INFO.PROGRESS / STATUS_INFO.TOTAL / STATUS_INFO.NUMBER_OF_JOBS; 
+      STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.TOTAL / STATUS_INFO.NUMBER_OF_JOBS; 
       updateStatus();
     });
     
