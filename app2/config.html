@@ -100,6 +100,8 @@ function main() {
             STATUS_INFO.STATUS='updateIssues';
             updateStatus();
             //5. UPDATE ISSUES
+            STATUS_INFO.TOTAL=Object.keys(getIssuesResult.times).length;
+            STATUS_INFO.PROGRESS=0;
             updateIssues(getIssuesResult, function(){
              //6. REMOVE CUSTOM FIELDS FROM SCREENS
               STATUS_INFO.STATUS='removeCustomFieldsfromTabs';
