@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/@atlassian/aui@9.6.0/dist/aui/aui-prototyping.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sinon.js/1.15.4/sinon.js"></script>
+<script src="https://unpkg.com/@atlassian/aui@9.6.0/dist/aui/aui-prototyping.js"></script>
 <script>
 var requestCounter={};
 var AP2 = { 
   request: function(params){
     if(params.url.includes('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog')) {
       if(requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']) {
-        params.success( '{ "issues": [ ] }' );
+        params.success( '{ "total":1,"issues": [ ] }' );
       } else {
         requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']=true;
-        params.success( '{"issues": [{"id": 1,"c1":"","fields":{"created":"2023-01-06T22:27:47.163+0200"},"transitions": [{"name": "To Do"}],"changelog": {"histories": [{"created": "2023-05-06T22:27:47.163+0200","items": [{"field": "Status","fromString": "To Do","toString": "Done"}]}]}}]}' );
+        params.success( '{"total":1,"issues": [{"id": 1,"c1":"","fields":{"created":"2023-01-06T22:27:47.163+0200"},"transitions": [{"name": "To Do"}],"changelog": {"histories": [{"created": "2023-05-06T22:27:47.163+0200","items": [{"field": "Status","fromString": "To Do","toString": "Done"}]}]}}]}' );
       }
     }///rest/api/3/field/search?type=custom&query=
     else if(params.url.includes('/rest/api/3/field/search?type=custom&query=')) {
@@ -47,426 +51,472 @@ var AP2 = {
     else if(params.url.includes('/rest/api/3/issue/')) {
         params.success( '{"id":"t2","name":"tab 2"}' );
     }
+    else if(params.url.includes('/rest/api/3/project/search?fields=id,key,name&maxResults=100')) {
+      if(requestCounter['/rest/api/3/project/search?fields=id,key,name&maxResults=100']) {
+        params.success( '{ "values": [ ] }' );
+      } else {
+        requestCounter['/rest/api/3/project/search?fields=id,key,name&maxResults=100']=true;
+        params.success( '{"values": [{"id": "p1","key":"p1key","name":"p1name"}]}' );
+      }
+    }
   }
 };
 
-function main() {
-  const CUSTOMFIELD_PREFIX = 'GTOLA ';//'Duration In '
-  var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,NUMBER_OF_JOBS:0 };
-  function updateStatus() {
-    if(STATUS_INFO.PERCENTAGE>=1) {
-      STATUS_INFO.PERCENTAGE=1;
-      STATUS_INFO.STATUS='DONE';
-    }
-    document.getElementById("gtolaStatus").innerHTML = Math.round(parseFloat(STATUS_INFO.PERCENTAGE.toFixed(2))*100)+"% "+STATUS_INFO.STATUS;
-  }
-  //testUpdate();
-
-  function testUpdate() {
-    var data = [{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})},{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})}];
-    bulk(data, 'PUT',1, function(argument) {
-      //done
-      doneCallback();
-    }, function(argument, argument2) {
-      //response
-      
-    });
-    
-  }
-  
-  //return;
-  
-  STATUS_INFO.NUMBER_OF_JOBS=6;
-  STATUS_INFO.STATUS='getIssues';
-  updateStatus();
-  //1. GET ISSUES and CALCULATE
-  getIssues(function(getIssuesResult) {   
-    //STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-    STATUS_INFO.STATUS='getMissingCustomFields';
-    updateStatus();
-    //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
-    getMissingCustomFields(getIssuesResult,function(getIssuesResult, missingCustomFieldsResult) {
-      STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-      STATUS_INFO.STATUS='createCustomFields';
-      updateStatus();
-      //3. CREATE MISSING CUSTOM FIELDS   
-      createCustomFields(getIssuesResult, missingCustomFieldsResult, function(getIssuesResult) {
-        STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-        STATUS_INFO.STATUS='addCustomFieldsToScreenTabs';
-        updateStatus();
-        //4. ADD CUSTOM FIELDS TO SCREENS
-        addCustomFieldsToScreenTabs(getIssuesResult,function(){
-            STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-            STATUS_INFO.STATUS='updateIssues';
-            updateStatus();
-            //5. UPDATE ISSUES
-            STATUS_INFO.TOTAL=Object.keys(getIssuesResult.times).length;
-            updateIssues(getIssuesResult, function(){
-             //6. REMOVE CUSTOM FIELDS FROM SCREENS
-              STATUS_INFO.STATUS='removeCustomFieldsfromTabs';
-              updateStatus();
-              removeCustomFieldsfromTabs(getIssuesResult, function(){
-                STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-                STATUS_INFO.STATUS='done';
-                updateStatus();
-                console.log('done');
-              });
-            });
-        });
-      });
-    });
-    
-  });
-
-function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
-  if(getIssuesResult.tabsDeleteDatas.length===0)
-    doneCallback();
-  bulk(getIssuesResult.tabsDeleteDatas, 'DELETE',10, function(argument) {
-    //done
-    doneCallback();
-  }, function(argument, argument2) {
-    //response
-  });
-}
-
-  function updateIssues(getIssuesResult, doneCallback) {
-    var inTimesKeys = Object.keys(getIssuesResult.times);
-    var urlsAndPostDatas = [];
-    for(var i=0;i<inTimesKeys.length;i++) {
-      var issueKey=inTimesKeys[i];
-      var postCustomfieldData = {};
-      postCustomfieldData['fields']={};
-      
-      var times = Object.keys(getIssuesResult.times[issueKey]);
-      for(var j=0;j<times.length;j++) {
-        var tmpStatus = times[j];
-        if(tmpStatus!=='currentList')
-          postCustomfieldData['fields'][getIssuesResult.existingCustomFields[CUSTOMFIELD_PREFIX+tmpStatus]]=parseFloat(getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3));      }
-    
-      urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
-    }
-    bulk(urlsAndPostDatas, 'PUT',10, function(argument) {
-      //done
-      doneCallback();
-    }, function(argument, argument2) {
-      //response
-      STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.TOTAL / STATUS_INFO.NUMBER_OF_JOBS; 
-      updateStatus();
-    });
-    
-  }
-
-
-  function getIssues(doneCallback) {
-    var result = { times: {}, existingCustomFields: {}};//&jql=project=PROJ2    updated%20%3E%3D%20-1d%20AND%20project%20in%20%28BUG%2C%20BUG2%2C%20ITIS%2C%20P3%2C%20PROJ2%2C%20SUP%29    updated%20%3E%3D%20-1.4h%20AND%20project%20%3D%20PROJ%20order%20by%20updated%20DESC
-    doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100','issues', 10, 
-    function(data) {
-      for(var j=0;j<data.issues.length;j++)
-        calculate(data.issues[j],result.times,result.existingCustomFields);
-        
-      if(data.issues.length>0)
-        STATUS_INFO.PERCENTAGE += 1 / (data.total/data.issues.length) / STATUS_INFO.NUMBER_OF_JOBS; 
-      updateStatus();
-    }
-    , function() {
-      doneCallback(result);
-    });
-  }
-
-  function getMissingCustomFields(getIssuesResult, doneCallback) {
-    var allFields = {};
-    var missing = [];
-    doGetMultithread('/rest/api/3/field/search?type=custom&query='+encodeURIComponent(CUSTOMFIELD_PREFIX)+'&maxResults=100','values', 3, 
+GTOLA = {
+  loadProjects:function (){ 
+    var projects=[];
+    GTOLA.doGetMultithread('/rest/api/3/project/search?fields=id,key,name&maxResults=100','values', 5, 
       function(data) {
-        for(var j=0;j<data.values.length;j++)
-          allFields[data.values[j].name]=data.values[j].id;
+        for(var i=0;i<data.values.length;i++) {
+          projects.push({'key':data.values[i].key,'name':data.values[i].name});
+        }
       }
-    , function() {
-      var missingCustomFieds = {};
-      var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
-      for(var i=0;i<inTimesKeys.length;i++) {
-        if(!allFields[inTimesKeys[i]])
-          missing.push(inTimesKeys[i]);
-        else
-          getIssuesResult.existingCustomFields[inTimesKeys[i]]=allFields[inTimesKeys[i]];
-      }
-      doneCallback(getIssuesResult,missing);
-    });
-  }
+      , function() {
+        var $form = AJS.$("<form/>", {"class": "aui"});
+        var $p = AJS.$("<p />");
 
-  function createCustomFields(getIssuesResult, customFieldsArray, callback) {
-    if(customFieldsArray.length===0)
-      callback(getIssuesResult);
-  
-    var urlsAndPostDatas = [];
-    for(var i=0;i<customFieldsArray.length;i++) {
-      var tmpPostData = JSON.stringify({
-        "description": customFieldsArray[i] +' Status',
-        "name": customFieldsArray[i],
-        "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:numberrange",
-        "type": "com.atlassian.jira.plugin.system.customfieldtypes:float"
+        // create the single-select element
+        var $select = AJS.$("<aui-select />", { "id": "gtolaSelect", "name": "week-picker", "placeholder": "Choose a time period"}); 
+
+        // Append elements to the DOM
+        $p.append($select);
+        $form.append($p);
+        $form.appendTo(document.body);
+
+        // Create options for the single-select
+
+        // create the options for the single-select
+        for (var i = 0; i < projects.length; i++) {
+          var $opt = AJS.$('<aui-option value="'+projects[i].key+'">option '+projects[i].name+'</aui-option>');
+          $select.append($opt);
+        }
       });
-      urlsAndPostDatas.push({ url: '/rest/api/3/field', postData: tmpPostData});
-    }
+  },
+  go:function (){
+    const select = document.getElementById("gtolaSelect");; 
+    alert('val: '+ select.value); 
+  },
+  doGetMultithread: function(paramUrl, paramXpath, threads, responseCallback, doneCallback) {
+      var sharedStart=0;
+      var sharedDone=false;
+      var sharedStarted=0;
+      var sharedFinished=0;
+      var xpath="";
+      var url="";
+      var doneCalled=false;
+      var retryCount=0;
+      var retryCounter=0;
 
+      run(threads,doneCallback);
 
-    bulk(urlsAndPostDatas, 'POST',10, function(argument) {
-      //done
-      callback(getIssuesResult);
-    }, function(argument, argument2) {
-      //response
-      getIssuesResult.existingCustomFields[customFieldsArray[argument2]]=argument.id;
-    });
-  }
-
-  function addCustomFieldsToScreenTabs(getIssuesResult, callback) {
-    var screens = [];
-    doGetMultithread('/rest/api/3/screens?maxResults=100','values', 10, 
-      function(data) {
-        for(var i=0;i<data.values.length;i++)
-          screens.push(data.values[i].id);
+      function run(threads, doneCallback){   
+        sharedStart=threads;
+        sharedDone=false;
+        sharedStarted=0;
+        sharedFinished=0;
+        url=paramUrl;
+        xpath=paramXpath;
+        retryCount=10*threads;
+        for(var i=0;i<sharedStart;)
+          nea(i++, function() { doneCallback(); } );
       }
-    , function() {
-      var tabs = [];
-      var urlsAndPostDatas = [];
-      for(var i=0;i<screens.length;i++)
-        urlsAndPostDatas.push({ url: '/rest/api/2/screens/'+screens[i]+'/tabs', postData: null});
-      
-      bulk(urlsAndPostDatas, 'GET',10, function(argument) {
-        var tabsPostDatas = [];
-        var tabsGetDatas = [];
-        var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
-        var customFieldIds=[];
-        for(var i=0;i<inTimesKeys.length;i++) 
-          customFieldIds.push(getIssuesResult.existingCustomFields[inTimesKeys[i]]);
-        
-        for(var i=0;i<tabs.length;i++)
-          tabsGetDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: null});
- 
-        bulk(tabsGetDatas, 'GET',10, function(argument) {
-          if(customFieldIds.length===0)
-            callback();
-            
-          getIssuesResult['tabsDeleteDatas']=[];
-          for(var i=0;i<tabs.length;i++) {
-            for(var j=0;j<customFieldIds.length;j++) {
-              var postData = {};
-              postData['fieldId']=customFieldIds[j];
-              tabsPostDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: JSON.stringify(postData)});
-              getIssuesResult.tabsDeleteDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields/'+customFieldIds[j], postData: null});
-            }
-          }
-        
-          bulk(tabsPostDatas, 'POST',10, function(argument) {
-            //done
-            callback();
-          }, function(argument) {
 
-          });
-        }, function(argument) {
-          var found=false;
-          for(var i=0;i<customFieldIds.length; i++) {
-            for(var j=0;j<argument.length;j++) {
-              if(customFieldIds[i]===argument[j].id) {
-                customFieldIds.splice(i, 1);
-                found=true;
-                break;
-              }
-              if(found)
-                break;
-            }
+      function nea(tmpUrl, doneCallback, retry) {
+         if(sharedDone && sharedFinished===sharedStarted && !retry){
+            if(!doneCalled) {
+              doneCalled=true;
+             doneCallback();
+           }
+         } else {
+           if(!sharedDone || retry) {
+            sharedStarted++;
+            AP.request({url: url+'&startAt='+(tmpUrl*100), type: 'GET', success: function(responseText){    
+               let data = JSON.parse(responseText);
+               if(data[xpath].length===0) 
+                sharedDone=true;
+               sharedFinished++;
+               console.log(url+'&startAt='+(tmpUrl*100));
+               
+               responseCallback(data);
+               
+               nea(sharedStart++,doneCallback);
+              }, error: function(xhr, statusText, errorThrown){  
+                sharedFinished++;
+                 console.log("GT:retry " +tmpUrl );
+                 if(retryCounter++<retryCount)
+                   setTimeout(nea, 110*1000 ,tmpUrl,doneCallback, true);
+              } 
+            });	
           }
-        });
-        
+        }
+      }
+    }
+  ,
+  main: function() {
+    const CUSTOMFIELD_PREFIX = 'GTOLA ';//'Duration In '
+    var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,NUMBER_OF_JOBS:0 };
+    function updateStatus() {
+      if(STATUS_INFO.PERCENTAGE>=1) {
+        STATUS_INFO.PERCENTAGE=1;
+        STATUS_INFO.STATUS='DONE';
+      }
+      document.getElementById("gtolaStatus").innerHTML = Math.round(parseFloat(STATUS_INFO.PERCENTAGE.toFixed(2))*100)+"% "+STATUS_INFO.STATUS;
+    }
+    //testUpdate();
 
-        
-      }, function(argument,argument2) {
+    function testUpdate() {
+      var data = [{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})},{ url: '/rest/api/3/issue/PROJ-9461', postData: JSON.stringify({fields:{customfield_10433:243418987.476}})}];
+      bulk(data, 'PUT',1, function(argument) {
+        //done
+        doneCallback();
+      }, function(argument, argument2) {
         //response
-        for(var k=0;k<argument.length;k++)
-          tabs.push({"tab":argument[k].id, "screen":screens[argument2]});
+        
       });
+      
+    }
+    
+    //return;
+    
+    STATUS_INFO.NUMBER_OF_JOBS=6;
+    STATUS_INFO.STATUS='getIssues';
+    updateStatus();
+    //1. GET ISSUES and CALCULATE
+    getIssues(function(getIssuesResult) {   
+      //STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+      STATUS_INFO.STATUS='getMissingCustomFields';
+      updateStatus();
+      //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
+      getMissingCustomFields(getIssuesResult,function(getIssuesResult, missingCustomFieldsResult) {
+        STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+        STATUS_INFO.STATUS='createCustomFields';
+        updateStatus();
+        //3. CREATE MISSING CUSTOM FIELDS   
+        createCustomFields(getIssuesResult, missingCustomFieldsResult, function(getIssuesResult) {
+          STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+          STATUS_INFO.STATUS='addCustomFieldsToScreenTabs';
+          updateStatus();
+          //4. ADD CUSTOM FIELDS TO SCREENS
+          addCustomFieldsToScreenTabs(getIssuesResult,function(){
+              STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+              STATUS_INFO.STATUS='updateIssues';
+              updateStatus();
+              //5. UPDATE ISSUES
+              STATUS_INFO.TOTAL=Object.keys(getIssuesResult.times).length;
+              updateIssues(getIssuesResult, function(){
+               //6. REMOVE CUSTOM FIELDS FROM SCREENS
+                STATUS_INFO.STATUS='removeCustomFieldsfromTabs';
+                updateStatus();
+                removeCustomFieldsfromTabs(getIssuesResult, function(){
+                  STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
+                  STATUS_INFO.STATUS='done';
+                  updateStatus();
+                  console.log('done');
+                });
+              });
+          });
+        });
+      });
+      
+    });
+
+  function removeCustomFieldsfromTabs(getIssuesResult, doneCallback) {
+    if(getIssuesResult.tabsDeleteDatas.length===0)
+      doneCallback();
+    bulk(getIssuesResult.tabsDeleteDatas, 'DELETE',10, function(argument) {
+      //done
+      doneCallback();
+    }, function(argument, argument2) {
+      //response
     });
   }
 
-  function bulk(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
-    var retryCount=0;
-    var retryCounter=0;
-    run(urlsAndPostDatas, method,threads, doneCallback, responseCallback);
-
-    function run(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
-        var total = urlsAndPostDatas.length;
-        var itemsPerThread = Math.floor( total/threads );
-
-        if(threads>=total) {
-            itemsPerThread=1;
-            threads=total;
-        }
-        retryCount=20*threads;
-        var done = [];
-        for(var i=0;i<threads;i++)
-            done.push(false);
-        for(var i=0;i<threads;i++)
-            nea1(i,i*itemsPerThread,i===threads-1 ? total : i*itemsPerThread+itemsPerThread,function(argg) { done[argg]=true; check1(done,doneCallback); },
-               urlsAndPostDatas,method, responseCallback);
-    }
-
-    function check1(done,callback) {
-        for(var j=0;j<done.length;j++)
-            if(!done[j])
-                return;
-         callback();
-    }
-
-    function nea1(ii, tmpUrl, max, callback, urlsAndPostDatas, method,responseCallback) {
-       if(tmpUrl>=max){
-           callback(ii);
-       } else {
-        if(!urlsAndPostDatas[tmpUrl])
-          console.log('here');
-         AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
-           console.log(urlsAndPostDatas[tmpUrl].url);
-           responseCallback(data ? JSON.parse(data) : null,tmpUrl);
-           nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
-        }, error: function(xhr, statusText, errorThrown){  
-            var retryAfter = xhr.getResponseHeader('retry-after');
-            if(retryAfter)
-              retryAfter=parseInt(retryAfter);
-            else
-              retryAfter=110;
-           console.log("GT:retry " +tmpUrl );
-           if(retryCounter++<retryCount)
-               setTimeout(nea1, retryAfter*1000 ,ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
-        } }); 
+    function updateIssues(getIssuesResult, doneCallback) {
+      var inTimesKeys = Object.keys(getIssuesResult.times);
+      var urlsAndPostDatas = [];
+      for(var i=0;i<inTimesKeys.length;i++) {
+        var issueKey=inTimesKeys[i];
+        var postCustomfieldData = {};
+        postCustomfieldData['fields']={};
+        
+        var times = Object.keys(getIssuesResult.times[issueKey]);
+        for(var j=0;j<times.length;j++) {
+          var tmpStatus = times[j];
+          if(tmpStatus!=='currentList')
+            postCustomfieldData['fields'][getIssuesResult.existingCustomFields[CUSTOMFIELD_PREFIX+tmpStatus]]=parseFloat(getIssuesResult.times[issueKey][tmpStatus].time.toFixed(3));      }
+      
+        urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
       }
+      bulk(urlsAndPostDatas, 'PUT',10, function(argument) {
+        //done
+        doneCallback();
+      }, function(argument, argument2) {
+        //response
+        STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.TOTAL / STATUS_INFO.NUMBER_OF_JOBS; 
+        updateStatus();
+      });
+      
     }
 
-  }
 
-  function doGetMultithread(paramUrl, paramXpath, threads, responseCallback, doneCallback) {
-    var sharedStart=0;
-    var sharedDone=false;
-    var sharedStarted=0;
-    var sharedFinished=0;
-    var xpath="";
-    var url="";
-    var doneCalled=false;
-    var retryCount=0;
-    var retryCounter=0;
-
-    run(threads,doneCallback);
-
-    function run(threads, doneCallback){   
-      sharedStart=threads;
-      sharedDone=false;
-      sharedStarted=0;
-      sharedFinished=0;
-      url=paramUrl;
-      xpath=paramXpath;
-      retryCount=10*threads;
-      for(var i=0;i<sharedStart;)
-        nea(i++, function() { doneCallback(); } );
-    }
-
-    function nea(tmpUrl, doneCallback, retry) {
-       if(sharedDone && sharedFinished===sharedStarted && !retry){
-          if(!doneCalled) {
-            doneCalled=true;
-           doneCallback();
-         }
-       } else {
-         if(!sharedDone || retry) {
-          sharedStarted++;
-          AP.request({url: url+'&startAt='+(tmpUrl*100), type: 'GET', success: function(responseText){    
-             let data = JSON.parse(responseText);
-             if(data[xpath].length===0) 
-              sharedDone=true;
-             sharedFinished++;
-             console.log(url+'&startAt='+(tmpUrl*100));
-             
-             responseCallback(data);
-             
-             nea(sharedStart++,doneCallback);
-            }, error: function(xhr, statusText, errorThrown){  
-              sharedFinished++;
-               console.log("GT:retry " +tmpUrl );
-               if(retryCounter++<retryCount)
-                 setTimeout(nea, 110*1000 ,tmpUrl,doneCallback, true);
-            } 
-          });	
-        }
-      }
-    }
-  }
-  
-  function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) { 
-    let metric = 1000 * 60;
-    
-    let tmpDate = new Date(DATA.fields.created);
-    let tmpCardId = DATA.key;
-    let tmpList = DATA.transitions[0].name;
-    
-    //debugger;
-    
-    let startFrom = DATA.changelog.histories.length-1;
-    let moved = false;
-    let prevStatusAfterMove=null;
-    for(let i=0;i<DATA.changelog.histories.length && !moved;i++) {
-      for(let j=0;j<DATA.changelog.histories[i].items.length;j++) {
-        if(DATA.changelog.histories[i].items[j].field==="status") {
-          prevStatusAfterMove = DATA.changelog.histories[i].items[j].fromString;
-        } else if(DATA.changelog.histories[i].items[j].field==="project") {
-          tmpList=prevStatusAfterMove ? prevStatusAfterMove : DATA.fields.status.name;
-          tmpDate= new Date(DATA.changelog.histories[i].created);
-          startFrom = i;
-          moved=true;
-          break;
-        }
-      }
-    }
-    
-    TIMES[tmpCardId] = {};
-    TIMES[tmpCardId]['currentList']=tmpList;
-    TIMES[tmpCardId][tmpList] = {};
-    TIMES[tmpCardId][tmpList]['from']=tmpDate;
-    TIMES[tmpCardId][tmpList]['time']=0;
-    
-    CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpList]="";
-    
-    for(let i=startFrom; i>=0; i--) {  
-      for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
-        if(DATA.changelog.histories[i].items[j].field==="status") {
-          tmpDate = new Date(DATA.changelog.histories[i].created);
-          let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
-          let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
+    function getIssues(doneCallback) {
+      var result = { times: {}, existingCustomFields: {}};//&jql=project=PROJ2    updated%20%3E%3D%20-1d%20AND%20project%20in%20%28BUG%2C%20BUG2%2C%20ITIS%2C%20P3%2C%20PROJ2%2C%20SUP%29    updated%20%3E%3D%20-1.4h%20AND%20project%20%3D%20PROJ%20order%20by%20updated%20DESC
+      GTOLA.doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100','issues', 10, 
+      function(data) {
+        for(var j=0;j<data.issues.length;j++)
+          calculate(data.issues[j],result.times,result.existingCustomFields);
           
-          CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpListBefore]="";
-          CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpListAfter]="";
-          
-          TIMES[tmpCardId]['currentList']=tmpListAfter;     
-          if(TIMES[tmpCardId][tmpListBefore])
-            TIMES[tmpCardId][tmpListBefore]['time'] += (tmpDate-TIMES[tmpCardId][tmpListBefore]['from'])/metric;
-          if(!TIMES[tmpCardId][tmpListAfter])
-            TIMES[tmpCardId][tmpListAfter] = { time: 0};
-          TIMES[tmpCardId][tmpListAfter]['from'] = tmpDate;
+        if(data.issues.length>0)
+          STATUS_INFO.PERCENTAGE += 1 / (data.total/data.issues.length) / STATUS_INFO.NUMBER_OF_JOBS; 
+        updateStatus();
+      }
+      , function() {
+        doneCallback(result);
+      });
+    }
+
+    function getMissingCustomFields(getIssuesResult, doneCallback) {
+      var allFields = {};
+      var missing = [];
+      GTOLA.doGetMultithread('/rest/api/3/field/search?type=custom&query='+encodeURIComponent(CUSTOMFIELD_PREFIX)+'&maxResults=100','values', 3, 
+        function(data) {
+          for(var j=0;j<data.values.length;j++)
+            allFields[data.values[j].name]=data.values[j].id;
         }
+      , function() {
+        var missingCustomFieds = {};
+        var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
+        for(var i=0;i<inTimesKeys.length;i++) {
+          if(!allFields[inTimesKeys[i]])
+            missing.push(inTimesKeys[i]);
+          else
+            getIssuesResult.existingCustomFields[inTimesKeys[i]]=allFields[inTimesKeys[i]];
+        }
+        doneCallback(getIssuesResult,missing);
+      });
     }
+
+    function createCustomFields(getIssuesResult, customFieldsArray, callback) {
+      if(customFieldsArray.length===0)
+        callback(getIssuesResult);
     
-    var timesCounter=0;
-    var keys = Object.keys(TIMES);
-    for(var i=0;i<keys.length;i++) {
-      var key = keys[i];
-      let now = new Date();
-      TIMES[key][ TIMES[key]['currentList'] ]['time']+=(now-TIMES[key][ TIMES[key]['currentList'] ]['from'])/metric;
-      timesCounter++;
+      var urlsAndPostDatas = [];
+      for(var i=0;i<customFieldsArray.length;i++) {
+        var tmpPostData = JSON.stringify({
+          "description": customFieldsArray[i] +' Status',
+          "name": customFieldsArray[i],
+          "searcherKey": "com.atlassian.jira.plugin.system.customfieldtypes:numberrange",
+          "type": "com.atlassian.jira.plugin.system.customfieldtypes:float"
+        });
+        urlsAndPostDatas.push({ url: '/rest/api/3/field', postData: tmpPostData});
+      }
+
+
+      bulk(urlsAndPostDatas, 'POST',10, function(argument) {
+        //done
+        callback(getIssuesResult);
+      }, function(argument, argument2) {
+        //response
+        getIssuesResult.existingCustomFields[customFieldsArray[argument2]]=argument.id;
+      });
     }
+
+    function addCustomFieldsToScreenTabs(getIssuesResult, callback) {
+      var screens = [];
+      GTOLA.doGetMultithread('/rest/api/3/screens?maxResults=100','values', 10, 
+        function(data) {
+          for(var i=0;i<data.values.length;i++)
+            screens.push(data.values[i].id);
+        }
+      , function() {
+        var tabs = [];
+        var urlsAndPostDatas = [];
+        for(var i=0;i<screens.length;i++)
+          urlsAndPostDatas.push({ url: '/rest/api/2/screens/'+screens[i]+'/tabs', postData: null});
+        
+        bulk(urlsAndPostDatas, 'GET',10, function(argument) {
+          var tabsPostDatas = [];
+          var tabsGetDatas = [];
+          var inTimesKeys = Object.keys(getIssuesResult.existingCustomFields);
+          var customFieldIds=[];
+          for(var i=0;i<inTimesKeys.length;i++) 
+            customFieldIds.push(getIssuesResult.existingCustomFields[inTimesKeys[i]]);
+          
+          for(var i=0;i<tabs.length;i++)
+            tabsGetDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: null});
+   
+          bulk(tabsGetDatas, 'GET',10, function(argument) {
+            if(customFieldIds.length===0)
+              callback();
+              
+            getIssuesResult['tabsDeleteDatas']=[];
+            for(var i=0;i<tabs.length;i++) {
+              for(var j=0;j<customFieldIds.length;j++) {
+                var postData = {};
+                postData['fieldId']=customFieldIds[j];
+                tabsPostDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields', postData: JSON.stringify(postData)});
+                getIssuesResult.tabsDeleteDatas.push({ url: '/rest/api/2/screens/'+tabs[i].screen+'/tabs/'+tabs[i].tab+'/fields/'+customFieldIds[j], postData: null});
+              }
+            }
+          
+            bulk(tabsPostDatas, 'POST',10, function(argument) {
+              //done
+              callback();
+            }, function(argument) {
+
+            });
+          }, function(argument) {
+            var found=false;
+            for(var i=0;i<customFieldIds.length; i++) {
+              for(var j=0;j<argument.length;j++) {
+                if(customFieldIds[i]===argument[j].id) {
+                  customFieldIds.splice(i, 1);
+                  found=true;
+                  break;
+                }
+                if(found)
+                  break;
+              }
+            }
+          });
+          
+
+          
+        }, function(argument,argument2) {
+          //response
+          for(var k=0;k<argument.length;k++)
+            tabs.push({"tab":argument[k].id, "screen":screens[argument2]});
+        });
+      });
+    }
+
+    function bulk(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
+      var retryCount=0;
+      var retryCounter=0;
+      run(urlsAndPostDatas, method,threads, doneCallback, responseCallback);
+
+      function run(urlsAndPostDatas, method,threads, doneCallback, responseCallback) {
+          var total = urlsAndPostDatas.length;
+          var itemsPerThread = Math.floor( total/threads );
+
+          if(threads>=total) {
+              itemsPerThread=1;
+              threads=total;
+          }
+          retryCount=20*threads;
+          var done = [];
+          for(var i=0;i<threads;i++)
+              done.push(false);
+          for(var i=0;i<threads;i++)
+              nea1(i,i*itemsPerThread,i===threads-1 ? total : i*itemsPerThread+itemsPerThread,function(argg) { done[argg]=true; check1(done,doneCallback); },
+                 urlsAndPostDatas,method, responseCallback);
+      }
+
+      function check1(done,callback) {
+          for(var j=0;j<done.length;j++)
+              if(!done[j])
+                  return;
+           callback();
+      }
+
+      function nea1(ii, tmpUrl, max, callback, urlsAndPostDatas, method,responseCallback) {
+         if(tmpUrl>=max){
+             callback(ii);
+         } else {
+          if(!urlsAndPostDatas[tmpUrl])
+            console.log('here');
+           AP.request({url: urlsAndPostDatas[tmpUrl].url, type: method, data: urlsAndPostDatas[tmpUrl].postData, contentType: 'application/json', headers: { Accept: 'application/json' }, success: function(data){    
+             console.log(urlsAndPostDatas[tmpUrl].url);
+             responseCallback(data ? JSON.parse(data) : null,tmpUrl);
+             nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
+          }, error: function(xhr, statusText, errorThrown){  
+              var retryAfter = xhr.getResponseHeader('retry-after');
+              if(retryAfter)
+                retryAfter=parseInt(retryAfter);
+              else
+                retryAfter=110;
+             console.log("GT:retry " +tmpUrl );
+             if(retryCounter++<retryCount)
+                 setTimeout(nea1, retryAfter*1000 ,ii, tmpUrl, max, callback,urlsAndPostDatas,method, responseCallback);
+          } }); 
+        }
+      }
+
+    }
+
+    
+    
+    function calculate(DATA,TIMES,CUSTOM_FIELDS_IN_TIMES) { 
+      let metric = 1000 * 60;
+      
+      let tmpDate = new Date(DATA.fields.created);
+      let tmpCardId = DATA.key;
+      let tmpList = DATA.transitions[0].name;
+      
+      //debugger;
+      
+      let startFrom = DATA.changelog.histories.length-1;
+      let moved = false;
+      let prevStatusAfterMove=null;
+      for(let i=0;i<DATA.changelog.histories.length && !moved;i++) {
+        for(let j=0;j<DATA.changelog.histories[i].items.length;j++) {
+          if(DATA.changelog.histories[i].items[j].field==="status") {
+            prevStatusAfterMove = DATA.changelog.histories[i].items[j].fromString;
+          } else if(DATA.changelog.histories[i].items[j].field==="project") {
+            tmpList=prevStatusAfterMove ? prevStatusAfterMove : DATA.fields.status.name;
+            tmpDate= new Date(DATA.changelog.histories[i].created);
+            startFrom = i;
+            moved=true;
+            break;
+          }
+        }
+      }
+      
+      TIMES[tmpCardId] = {};
+      TIMES[tmpCardId]['currentList']=tmpList;
+      TIMES[tmpCardId][tmpList] = {};
+      TIMES[tmpCardId][tmpList]['from']=tmpDate;
+      TIMES[tmpCardId][tmpList]['time']=0;
+      
+      CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpList]="";
+      
+      for(let i=startFrom; i>=0; i--) {  
+        for(let j=0;j<DATA.changelog.histories[i].items.length;j++)
+          if(DATA.changelog.histories[i].items[j].field==="status") {
+            tmpDate = new Date(DATA.changelog.histories[i].created);
+            let tmpListBefore = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].fromString;
+            let tmpListAfter = DATA.changelog.histories[i].items[DATA.changelog.histories[i].items.length-1].toString;    
+            
+            CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpListBefore]="";
+            CUSTOM_FIELDS_IN_TIMES[CUSTOMFIELD_PREFIX + tmpListAfter]="";
+            
+            TIMES[tmpCardId]['currentList']=tmpListAfter;     
+            if(TIMES[tmpCardId][tmpListBefore])
+              TIMES[tmpCardId][tmpListBefore]['time'] += (tmpDate-TIMES[tmpCardId][tmpListBefore]['from'])/metric;
+            if(!TIMES[tmpCardId][tmpListAfter])
+              TIMES[tmpCardId][tmpListAfter] = { time: 0};
+            TIMES[tmpCardId][tmpListAfter]['from'] = tmpDate;
+          }
+      }
+      
+      var timesCounter=0;
+      var keys = Object.keys(TIMES);
+      for(var i=0;i<keys.length;i++) {
+        var key = keys[i];
+        let now = new Date();
+        TIMES[key][ TIMES[key]['currentList'] ]['time']+=(now-TIMES[key][ TIMES[key]['currentList'] ]['from'])/metric;
+        timesCounter++;
+      }
+    }  
   }
-  
-}
+};
+
 </script>
 </head>
-<body>
+<body onload='GTOLA.loadProjects()'>
 <h1>CONFIG<h1>
-<button onclick="main()">GoGOGOGOGOOGOG</button>
+<button id="gtolaButton" onclick="GTOLA.go()">Go</button>
+<button class="aui-button aui-button-primary" onclick="GTOLA.main()">GoGOGOGOGOOGOG</button>
 <p id="gtolaStatus"></p>
 </body>
 </html>
