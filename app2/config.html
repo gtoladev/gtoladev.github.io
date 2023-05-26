@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/@atlassian/aui@9.6.0/dist/aui/aui-prototyping.js"></script>
 <script>
 var requestCounter={};
-var AP2 = { 
+var AP = { 
   request: function(params){
     if(params.url.includes('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog')) {
       if(requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']) {
@@ -64,32 +64,19 @@ var AP2 = {
 
 GTOLA = {
   loadProjects:function (){ 
-    var projects=[];
+  
+      
+  
+  
+    var projects={ 'data':[]};
     GTOLA.doGetMultithread('/rest/api/3/project/search?fields=id,key,name&maxResults=100','values', 5, 
       function(data) {
         for(var i=0;i<data.values.length;i++) {
-          projects.push({'key':data.values[i].key,'name':data.values[i].name});
+          projects.data.push({'id':data.values[i].key,'text':data.values[i].name});
         }
       }
       , function() {
-        var $form = AJS.$("<form/>", {"class": "aui"});
-        var $p = AJS.$("<p />");
-
-        // create the single-select element
-        var $select = AJS.$("<aui-select />", { "id": "gtolaSelect", "name": "week-picker", "placeholder": "Choose a time period"}); 
-
-        // Append elements to the DOM
-        $p.append($select);
-        $form.append($p);
-        $form.appendTo(document.body);
-
-        // Create options for the single-select
-
-        // create the options for the single-select
-        for (var i = 0; i < projects.length; i++) {
-          var $opt = AJS.$('<aui-option value="'+projects[i].key+'">option '+projects[i].name+'</aui-option>');
-          $select.append($opt);
-        }
+        AJS.$("#select2-example").select2({placeholder: "Select a Project", data: projects.data });//select2("enable", false)  ("#e8").select2("val")
       });
   },
   go:function (){
@@ -515,6 +502,10 @@ GTOLA = {
 </head>
 <body onload='GTOLA.loadProjects()'>
 <h1>CONFIG<h1>
+
+    <select id="select2-example">
+    </select>
+    
 <button id="gtolaButton" onclick="GTOLA.go()">Go</button>
 <button class="aui-button aui-button-primary" onclick="GTOLA.main()">GoGOGOGOGOOGOG</button>
 <p id="gtolaStatus"></p>
