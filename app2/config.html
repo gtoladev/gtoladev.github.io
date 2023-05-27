@@ -155,12 +155,15 @@ GTOLA = {
   main: function(mainArg1,mainArg2) {
     if(GTOLA.runButton.isBusy())
       return;
+
+    STATUS_INFO.PREV_STATUS="";STATUS_INFO.STATUS="";STATUS_INFO.PERCENTAGE=0;STATUS_INFO.TOTAL=0;STATUS_INFO.NUMBER_OF_JOBS=0;
+
     GTOLA.runButton.busy();
     var CUSTOMFIELD_PREFIX = 'Duration In ';//'Duration In '
     function updateStatus() {
       if(GTOLA.STATUS_INFO.PERCENTAGE>=1) {
         GTOLA.STATUS_INFO.PERCENTAGE=1;
-        GTOLA.STATUS_INFO.STATUS='DONE';
+        GTOLA.STATUS_INFO.STATUS='Done.';
       }
       document.getElementById("gtolaStatus").innerHTML = Math.round(parseFloat(GTOLA.STATUS_INFO.PERCENTAGE.toFixed(2))*100)+"% "+GTOLA.STATUS_INFO.STATUS;
     }
