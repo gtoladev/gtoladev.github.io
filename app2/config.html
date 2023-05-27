@@ -64,6 +64,9 @@ var AP2 = {
 
 GTOLA = {
   runButton:null,
+  STATUS_INFO : { PREV_STATUS:"",STATUS:"", PERCENTAGE:0,TOTAL:0,NUMBER_OF_JOBS:0 },
+  THROTTLING_STATUS: 'Waiting two minutes for API throttling to clear, hang on, do not refresh the browser.',
+
   loadProjects:function (){ 
     GTOLA.runButton = AJS.$('#gtolaRunButton')[0];
 
@@ -109,6 +112,12 @@ GTOLA = {
       }
 
       function nea(tmpUrl, doneCallback, retry) {
+        if(retry) {
+                  GTOLA.STATUS_INFO.STATUS=GTOLA.PREV_STATUS;
+                  updateStatus();
+        }
+
+
          if(sharedDone && sharedFinished===sharedStarted && !retry){
             if(!doneCalled) {
               doneCalled=true;
@@ -130,6 +139,10 @@ GTOLA = {
               }, error: function(xhr, statusText, errorThrown){  
                 sharedFinished++;
                  console.log("GT:retry " +tmpUrl );
+                 if(GTOLA.STATUS_INFO.STATUS!==THROTTLING_STATUS)
+                    GTOLA.PREV_STATUS = GTOLA.STATUS_INFO.STATUS;
+                  GTOLA.STATUS_INFO.STATUS=THROTTLING_STATUS;
+                  updateStatus();
                  if(retryCounter++<retryCount)
                    setTimeout(nea, 110*1000 ,tmpUrl,doneCallback, true);
               } 
@@ -144,13 +157,12 @@ GTOLA = {
       return;
     GTOLA.runButton.busy();
     var CUSTOMFIELD_PREFIX = 'Duration In ';//'Duration In '
-    var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,NUMBER_OF_JOBS:0 };
     function updateStatus() {
-      if(STATUS_INFO.PERCENTAGE>=1) {
-        STATUS_INFO.PERCENTAGE=1;
-        STATUS_INFO.STATUS='DONE';
+      if(GTOLA.STATUS_INFO.PERCENTAGE>=1) {
+        GTOLA.STATUS_INFO.PERCENTAGE=1;
+        GTOLA.STATUS_INFO.STATUS='DONE';
       }
-      document.getElementById("gtolaStatus").innerHTML = Math.round(parseFloat(STATUS_INFO.PERCENTAGE.toFixed(2))*100)+"% "+STATUS_INFO.STATUS;
+      document.getElementById("gtolaStatus").innerHTML = Math.round(parseFloat(GTOLA.STATUS_INFO.PERCENTAGE.toFixed(2))*100)+"% "+GTOLA.STATUS_INFO.STATUS;
     }
     //testUpdate();
 
@@ -168,38 +180,38 @@ GTOLA = {
     
     //return;
     
-    STATUS_INFO.NUMBER_OF_JOBS=6;
-    STATUS_INFO.STATUS='getIssues';
+    GTOLA.STATUS_INFO.NUMBER_OF_JOBS=6;
+    GTOLA.STATUS_INFO.STATUS='Getting issues for the selected project';
     updateStatus();
     //1. GET ISSUES and CALCULATE
     getIssues(function(getIssuesResult) {   
-      //STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-      STATUS_INFO.STATUS='getMissingCustomFields';
+      //GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
+      GTOLA.STATUS_INFO.STATUS='Checking if there are any custom fields to create';
       updateStatus();
       //2 FIND ALL STATUSES AND CHECK IF ANY CUSTOM FIELD IS MISSING 
       getMissingCustomFields(getIssuesResult,function(getIssuesResult, missingCustomFieldsResult) {
-        STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-        STATUS_INFO.STATUS='createCustomFields';
+        GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
+        GTOLA.STATUS_INFO.STATUS='Creating custom fields';
         updateStatus();
         //3. CREATE MISSING CUSTOM FIELDS   
         createCustomFields(getIssuesResult, missingCustomFieldsResult, function(getIssuesResult) {
-          STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-          STATUS_INFO.STATUS='addCustomFieldsToScreenTabs';
+          GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
+          GTOLA.STATUS_INFO.STATUS='Adding custom fields to screen tabs';
           updateStatus();
           //4. ADD CUSTOM FIELDS TO SCREENS
           addCustomFieldsToScreenTabs(getIssuesResult,function(){
-              STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-              STATUS_INFO.STATUS='updateIssues';
+              GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
+              GTOLA.STATUS_INFO.STATUS='Updating issues with latest duration values in each of their statuses';
               updateStatus();
               //5. UPDATE ISSUES
-              STATUS_INFO.TOTAL=Object.keys(getIssuesResult.times).length;
+              GTOLA.STATUS_INFO.TOTAL=Object.keys(getIssuesResult.times).length;
               updateIssues(getIssuesResult, function(){
                //6. REMOVE CUSTOM FIELDS FROM SCREENS
-                STATUS_INFO.STATUS='removeCustomFieldsfromTabs';
+                GTOLA.STATUS_INFO.STATUS='Removing custom fields from screen tabs';
                 updateStatus();
                 removeCustomFieldsfromTabs(getIssuesResult, function(){
-                  STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.NUMBER_OF_JOBS; 
-                  STATUS_INFO.STATUS='done';
+                  GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
+                  GTOLA.STATUS_INFO.STATUS='done';
                   updateStatus();
                   console.log('done');
 
@@ -244,7 +256,7 @@ GTOLA = {
         doneCallback();
       }, function(argument, argument2) {
         //response
-        STATUS_INFO.PERCENTAGE += 1 / STATUS_INFO.TOTAL / STATUS_INFO.NUMBER_OF_JOBS; 
+        GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.TOTAL / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
         updateStatus();
       });
       
@@ -265,7 +277,7 @@ GTOLA = {
           calculate(data.issues[j],result.times,result.existingCustomFields);
           
         if(data.issues.length>0)
-          STATUS_INFO.PERCENTAGE += 1 / (data.total/data.issues.length) / STATUS_INFO.NUMBER_OF_JOBS; 
+          GTOLA.STATUS_INFO.PERCENTAGE += 1 / (data.total/data.issues.length) / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
         updateStatus();
       }
       , function() {
@@ -418,6 +430,11 @@ GTOLA = {
       }
 
       function nea1(ii, tmpUrl, max, callback, urlsAndPostDatas, method,responseCallback) {
+            if(GTOLA.STATUS_INFO.STATUS===GTOLA.THROTTLING_STATUS){
+              GTOLA.STATUS_INFO.STATUS=GTOLA.PREV_STATUS;
+              updateStatus();
+            }
+
          if(tmpUrl>=max){
              callback(ii);
          } else {
@@ -428,6 +445,12 @@ GTOLA = {
              responseCallback(data ? JSON.parse(data) : null,tmpUrl);
              nea1(ii, tmpUrl+1,max,callback,urlsAndPostDatas,method, responseCallback);
           }, error: function(xhr, statusText, errorThrown){  
+
+                 if(GTOLA.STATUS_INFO.STATUS!==GTOLA.THROTTLING_STATUS)
+                    GTOLA.PREV_STATUS = GTOLA.STATUS_INFO.STATUS;
+                  GTOLA.STATUS_INFO.STATUS=THROTTLING_STATUS;
+                  updateStatus();
+
               var retryAfter = xhr.getResponseHeader('retry-after');
               if(retryAfter)
                 retryAfter=parseInt(retryAfter);
