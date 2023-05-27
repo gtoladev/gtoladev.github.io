@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/@atlassian/aui@9.6.0/dist/aui/aui-prototyping.js"></script>
 <script>
 var requestCounter={};
-var AP = { 
+var AP2 = { 
   request: function(params){
     if(params.url.includes('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog')) {
       if(requestCounter['/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog']) {
@@ -23,7 +23,7 @@ var AP = {
         params.success( '{ "values": [ ] }' );
       } else {
         requestCounter['/rest/api/3/field/search?type=custom&query=']=true;
-        params.success( '{"values": [{"id": 1,"name":"Duration in DOING"}]}' );
+        params.success( '{"values": [{"id": 1,"name":"p1key Duration In DOING"}]}' );
       }
     }
     else if(params.url.includes('field/search')) {
@@ -46,7 +46,7 @@ var AP = {
       }
     }
     else if(params.url.includes('/tabs')) {
-        params.success( '{"id":"t2","name":"tab 2"}' );
+        params.success( '[{"id":"t2","name":"tab 2"}]' );
     }
     else if(params.url.includes('/rest/api/3/issue/')) {
         params.success( '{"id":"t2","name":"tab 2"}' );
@@ -56,32 +56,32 @@ var AP = {
         params.success( '{ "values": [ ] }' );
       } else {
         requestCounter['/rest/api/3/project/search?fields=id,key,name&maxResults=100']=true;
-        params.success( '{"values": [{"id": "p1","key":"p1key","name":"p1name"}]}' );
+        params.success( '{"values": [{"id": "p1","key":"p1key","name":"p1name"},{"id": "p2","key":"p2key","name":"p2name"}]}' );
       }
     }
   }
 };
 
 GTOLA = {
+  runButton:null,
   loadProjects:function (){ 
-  
-      
-  
-  
-    var projects={ 'data':[]};
+    GTOLA.runButton = AJS.$('#gtolaRunButton')[0];
+
+    var projects=[];
+
     GTOLA.doGetMultithread('/rest/api/3/project/search?fields=id,key,name&maxResults=100','values', 5, 
       function(data) {
         for(var i=0;i<data.values.length;i++) {
-          projects.data.push({'id':data.values[i].key,'text':data.values[i].name});
+          projects.push({'id':data.values[i].key,'text':data.values[i].name});
         }
       }
       , function() {
-        AJS.$("#select2-example").select2({placeholder: "Select a Project", data: projects.data });//select2("enable", false)  ("#e8").select2("val")
+        var sel = $('<select id="gtolaSelect">').appendTo('#projectSelectContainer');
+        $(projects).each(function() {
+         sel.append($("<option>").attr('value',this.id).text(this.text));
+        });
+         AJS.$('#gtolaSelect').auiSelect2(); 
       });
-  },
-  go:function (){
-    const select = document.getElementById("gtolaSelect");; 
-    alert('val: '+ select.value); 
   },
   doGetMultithread: function(paramUrl, paramXpath, threads, responseCallback, doneCallback) {
       var sharedStart=0;
@@ -139,8 +139,11 @@ GTOLA = {
       }
     }
   ,
-  main: function() {
-    const CUSTOMFIELD_PREFIX = 'GTOLA ';//'Duration In '
+  main: function(mainArg1,mainArg2) {
+    if(GTOLA.runButton.isBusy())
+      return;
+    GTOLA.runButton.busy();
+    var CUSTOMFIELD_PREFIX = 'Duration In ';//'Duration In '
     var STATUS_INFO = { STATUS:"", PERCENTAGE:0,TOTAL:0,NUMBER_OF_JOBS:0 };
     function updateStatus() {
       if(STATUS_INFO.PERCENTAGE>=1) {
@@ -199,6 +202,8 @@ GTOLA = {
                   STATUS_INFO.STATUS='done';
                   updateStatus();
                   console.log('done');
+
+                  GTOLA.runButton.idle();
                 });
               });
           });
@@ -247,8 +252,14 @@ GTOLA = {
 
 
     function getIssues(doneCallback) {
+      const select = document.getElementById("gtolaSelect");
+      if(!select.value) 
+        return;
+      var jql = '&jql=project='+encodeURIComponent(select.value);
+      CUSTOMFIELD_PREFIX = select.value +' '+ CUSTOMFIELD_PREFIX;
       var result = { times: {}, existingCustomFields: {}};//&jql=project=PROJ2    updated%20%3E%3D%20-1d%20AND%20project%20in%20%28BUG%2C%20BUG2%2C%20ITIS%2C%20P3%2C%20PROJ2%2C%20SUP%29    updated%20%3E%3D%20-1.4h%20AND%20project%20%3D%20PROJ%20order%20by%20updated%20DESC
-      GTOLA.doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100','issues', 10, 
+
+      GTOLA.doGetMultithread('/rest/api/3/search?fields=key,project,status,created&expand=transitions,changelog&maxResults=100'+jql,'issues', 10, 
       function(data) {
         for(var j=0;j<data.issues.length;j++)
           calculate(data.issues[j],result.times,result.existingCustomFields);
@@ -502,12 +513,9 @@ GTOLA = {
 </head>
 <body onload='GTOLA.loadProjects()'>
 <h1>CONFIG<h1>
-
-    <select id="select2-example">
-    </select>
-    
-<button id="gtolaButton" onclick="GTOLA.go()">Go</button>
-<button class="aui-button aui-button-primary" onclick="GTOLA.main()">GoGOGOGOGOOGOG</button>
-<p id="gtolaStatus"></p>
+<h3>Select a project to and hit Run to start calculating the durations. Custom fields will be created with names starting with the selected project key</h3>
+<div id="projectSelectContainer" style="display: inline-block;"></div>
+<button id="gtolaRunButton" style="display: inline-block;" class="aui-button aui-button-primary" onclick="GTOLA.main()">Run</button>
+<p style="display: inline-block;" id="gtolaStatus"></p>
 </body>
 </html>
