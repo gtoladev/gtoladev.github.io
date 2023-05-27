@@ -210,8 +210,8 @@ GTOLA = {
                 GTOLA.STATUS_INFO.STATUS='Removing custom fields from screen tabs';
                 updateStatus();
                 removeCustomFieldsfromTabs(getIssuesResult, function(){
-                  GTOLA.STATUS_INFO.PERCENTAGE += 1 / GTOLA.STATUS_INFO.NUMBER_OF_JOBS; 
-                  GTOLA.STATUS_INFO.STATUS='done';
+                  GTOLA.STATUS_INFO.PERCENTAGE =1; 
+                  GTOLA.STATUS_INFO.STATUS='Done!';
                   updateStatus();
                   console.log('done');
 
