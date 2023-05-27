@@ -251,6 +251,9 @@ GTOLA = {
       
         urlsAndPostDatas.push({ url: '/rest/api/3/issue/'+issueKey, postData: JSON.stringify(postCustomfieldData)});
       }
+      if(urlsAndPostDatas.length===0)
+        doneCallback();
+
       bulk(urlsAndPostDatas, 'PUT',10, function(argument) {
         //done
         doneCallback();
