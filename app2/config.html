@@ -4,7 +4,6 @@
 <script src="https://connect-cdn.atl-paas.net/all.js" crossorigin="anonymous" ></script>
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/@atlassian/aui@9.6.0/dist/aui/aui-prototyping.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sinon.js/1.15.4/sinon.js"></script>
 <script src="https://unpkg.com/@atlassian/aui@9.6.0/dist/aui/aui-prototyping.js"></script>
 <script>
 var requestCounter={};
@@ -543,10 +542,12 @@ GTOLA = {
 </script>
 </head>
 <body onload='GTOLA.loadProjects()'>
-<h1>CONFIG<h1>
-<h3>Select a project to and hit Run to start calculating the durations. Custom fields will be created with names starting with the selected project key</h3>
-<div id="projectSelectContainer" style="display: inline-block;"></div>
-<button id="gtolaRunButton" style="display: inline-block;" class="aui-button aui-button-primary" onclick="GTOLA.main()">Run</button>
-<p style="display: inline-block;" id="gtolaStatus"></p>
+  <div id="container" style="margin:5px;">   
+    <h1>Time In Status Reports Configuration<h1>
+    <h4>Select a project and hit Run to start calculating the durations. Custom fields will be created with names starting with the selected project key.</h4>
+    <div id="projectSelectContainer" style="display: inline-block;"></div>
+    <button id="gtolaRunButton" style="display: inline-block;" class="aui-button aui-button-primary" onclick="GTOLA.main()">Run</button>
+    <p style="display: inline-block;" id="gtolaStatus"></p>
+  </div>
 </body>
 </html>
